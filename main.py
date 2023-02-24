@@ -48,10 +48,10 @@ if __name__ == "__main__":
 
     # Inputs
     n_samples = 10000
-    n_hid_nodes = 10
+    n_hid_nodes = 100
     n_epochs = 200
-    mode = 'train'
-    data_desc = 'linear'
+    mode = 'test'
+    
 
     lr = 1e-4
     momentum = 0.9
@@ -61,51 +61,59 @@ if __name__ == "__main__":
     plotting = True
     verbose = False
 
+    
+
+    # Data perparation
+    # data_desc = 'linear'
+    data_desc = 'sin'
+
+    x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
+    # y = x + torch.rand([n_samples, 1])/10 - 0.05
+    y = np.sin(4*x) + torch.rand([n_samples, 1])/10 - 0.05
+
+    x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
+    # y_tst = x_tst + torch.rand([int(n_samples/10), 1])/10 - 0.05
+    y_tst = np.sin(4*x_tst) + torch.rand([int(n_samples/10), 1])/10 - 0.05
+
+
+    x = x.to(device)
+    y = y.to(device)
+    x_tst = x_tst.to(device)
+    y_tst = y_tst.to(device)
+
+    dataset = Dataset(x,y)
+    dataset_tst = Dataset(x_tst,y_tst)
+
+    
+    dataset_trn_size = int(n_samples * 0.8)
+    dataset_val_size = n_samples - dataset_trn_size
+    dataset_trn, dataset_val = random_split(dataset, [dataset_trn_size, dataset_val_size])
+    
+
+
+    loader_trn = DataLoader(dataset_trn, batch_size=batch_size, shuffle=True, num_workers=0)
+    loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=True, num_workers=0)
+    loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
+
+
     model_name = f"best_model_n{n_samples}_hn{n_hid_nodes}_{data_desc}.pth"
+
+    if plotting:
+        fig, ax = plt.subplots()
+        ax.plot(dataset_trn[:][0].cpu().numpy(),
+                dataset_trn[:][1].cpu().numpy(),'*')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.legend = True
+        ax.set_title("Training Data")
+        
+        # ax.plot(dataset_val[:][0].cpu().numpy(),
+        #         dataset_val[:][1].cpu().numpy(),'o')
+        
+        plt.show()
 
 
     if mode == 'train':
-        # Data perparation
-        
-        x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
-        y = x + torch.rand([n_samples, 1])/10 - 0.05
-
-        x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
-        y_tst = x_tst + torch.rand([int(n_samples/10), 1])/10 - 0.05
-
-
-        if plotting:
-            fig, ax = plt.subplots()
-            ax.plot(x,y)
-
-        x = x.to(device)
-        y = y.to(device)
-        x_tst = x_tst.to(device)
-        y_tst = y_tst.to(device)
-
-        dataset = Dataset(x,y)
-        dataset_tst = Dataset(x_tst,y_tst)
-
-       
-        dataset_trn_size = int(n_samples * 0.8)
-        dataset_val_size = n_samples - dataset_trn_size
-        dataset_trn, dataset_val = random_split(dataset, [dataset_trn_size, dataset_val_size])
-        
-
-
-        loader_trn = DataLoader(dataset_trn, batch_size=batch_size, shuffle=True, num_workers=0)
-        loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=True, num_workers=0)
-        loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
-
-        if plotting:
-            fig, ax = plt.subplots()
-            ax.plot(dataset_trn[:][0].cpu().numpy(),
-                    dataset_trn[:][1].cpu().numpy(),'*')
-            
-            ax.plot(dataset_val[:][0].cpu().numpy(),
-                    dataset_val[:][1].cpu().numpy(),'o')
-            
-            plt.show()
         
 
         # Model instantiation
@@ -181,6 +189,11 @@ if __name__ == "__main__":
             ax.plot(np.linspace(0,n_epochs,n_epochs),
                     loss_tst_all.detach().cpu().numpy())
             
+            ax.set_xlabel('Epoch')
+            ax.set_ylabel('Loss')
+            ax.legend = True
+            ax.set_title("Loss evolution")
+            
             plt.show()
 
 
@@ -192,18 +205,18 @@ if __name__ == "__main__":
 
     if mode == 'test':
         # Data perparation
-        x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
+        # x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
         # y_test = x_test + torch.rand([int(n_samples/10), 1])/10
-        y_tst = x_tst 
+        # y_tst = x_tst 
 
-        x_tst = x_tst.to(device)
-        y_tst = y_tst.to(device)
+        # x_tst = x_tst.to(device)
+        # y_tst = y_tst.to(device)
 
-        dataset_tst = Dataset(x_tst,y_tst)
+        # dataset_tst = Dataset(x_tst,y_tst)
 
-        loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
+        # loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
 
-        
+        criterion = nn.MSELoss()
 
 
         model = torch.load(f'./Weights/{model_name}')
@@ -220,6 +233,10 @@ if __name__ == "__main__":
             ax.plot(dataset_tst[:][0].cpu().numpy(),
                     y_test_prd.cpu().detach().numpy(),'o')
             
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.legend = True
+            ax.set_title("Test Data")
         
             plt.show()
 
