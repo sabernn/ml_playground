@@ -12,6 +12,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
+import argparse
+
+def arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--n_samples', metavar = 'N', type = int, default = 10000, help = 'Number of training and validation samples')
+    parser.add_argument('-tp', '--train_perc', metavar = 'Np', type = float, default = 0.8, help = 'Percentage of training samples from total number of samples')
+    parser.add_argument('-nt', '--n_test', metavar = 'Nh', type = int, default = 10, help = 'Number of hidden nodes at each hidden layer')
+    parser.add_argument('-ep', '--n_epochs', metavar = 'Ep', type = int, default = 200, help = 'Number of epochs')
+    parser.add_argument('-nhl', '--n_hid_layers', metavar = 'Nhl', type = int, default = 1, help = 'Number of hidden layers')
+    parser.add_argument('-nhn', '--n_hid_nodes', metavar = 'Nhn', type = int, default = 10, help = 'Number of nodes at each hidden layer')
+    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
+
+    parser.add_argument('-lr', '--learning_rate', metavar = 'Lr', type = float, default = 1e-4, help = 'Learning rate')
+    parser.add_argument('-mom', '--momentum', metavar = 'Mom', type = float, default = 0.9, help = 'Momentum')
+    parser.add_argument('-bs', '--batch_size', metavar = 'Bs', type = int, default = 200, help = 'Batch size')
+
+    parser.add_argument('-bstp', '--batch_step', metavar = 'Bstp', type = int, default = 10, help = 'Batch step for reporting when verbose is True')
+
+    parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = True, help = 'Plotting the data and results')
+    parser.add_argument('-vrb', '--verbose', metavar = 'Vrb', type = bool, default = True, help = 'Reporting the performance during training and evaluation')
+
+    args = parser.parse_args()
+    return args
+
+
 
 
 
@@ -45,21 +70,22 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
+    args = arg_parser()
 
     # Inputs
-    n_samples = 10000
-    n_hid_nodes = 100
-    n_epochs = 200
-    mode = 'test'
+    n_samples = args.n_samples
+    n_hid_nodes = args.n_hid_nodes
+    n_epochs = args.n_epochs
+    mode = args.mode
     
 
-    lr = 1e-4
-    momentum = 0.9
-    batch_size = 200
-    batch_step = 10
+    lr = args.learning_rate
+    momentum = args.momentum
+    batch_size = args.batch_size
+    batch_step = args.batch_step
 
-    plotting = True
-    verbose = False
+    plotting = args.plotting
+    verbose = args.verbose
 
     
 
@@ -203,7 +229,7 @@ if __name__ == "__main__":
     # Testing
 
 
-    if mode == 'test':
+    elif mode == 'test':
         # Data perparation
         # x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
         # y_test = x_test + torch.rand([int(n_samples/10), 1])/10
@@ -239,6 +265,9 @@ if __name__ == "__main__":
             ax.set_title("Test Data")
         
             plt.show()
+
+    else:
+        print("Noting to do!")
 
 
 
