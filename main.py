@@ -32,27 +32,30 @@ def arg_parser():
 
     parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = True, help = 'Plotting the data and results')
     parser.add_argument('-vrb', '--verbose', metavar = 'Vrb', type = bool, default = True, help = 'Reporting the performance during training and evaluation')
+    parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
 
     args = parser.parse_args()
     return args
 
 
 class FCN(nn.Module):
-    def __init__(self,m: int,h: int,n: int) -> None:
+    def __init__(self,m: int,nhn: int,n: int) -> None:
         super().__init__()
         # Setting bias = False diverges the net for sinosuidal data regression
-        self.Lin = nn.Linear(m, h, bias=True)
-        self.L2 = nn.Linear(h, h, bias=True)
-        self.Lout = nn.Linear(h, n, bias=True)
+        self.Lin = nn.Linear(m, nhn, bias=True)
+        # TO DO: OrderedDict for nn.Sequential
+        self.LH = nn.Linear(nhn, nhn, bias=True)
+        self.Lout = nn.Linear(nhn, n, bias=True)
 
-        self.FLOPs = 2*m*n + 2*h*h + 2*h*n
+
+        self.FLOPs = 2*m*n + 2*nhn*nhn + 2*nhn*n
 
     def forward(self,x: Tensor) -> Tensor:
         # For a sinosuidal regression problem, relu and tanh proved to be more effective
         x = self.Lin(x)
         x = torch.relu(x) 
         # x = torch.tanh(x)
-        x = self.L2(x)
+        x = self.LH(x)
         x = torch.relu(x) 
         # x = torch.tanh(x)
         x = self.Lout(x)
@@ -104,6 +107,7 @@ if __name__ == "__main__":
 
     plotting = args.plotting
     verbose = args.verbose
+    recordlog = args.recordlog
 
     
 
@@ -144,7 +148,7 @@ if __name__ == "__main__":
         print(f"Data preparation time: {np.round(time()-t_dp,3)} s")
 
 
-    model_name = f"best_model_n{n_samples}_hn{n_hid_nodes}_{data_desc}.pth"
+    model_name = f"best_model_n{n_samples}_hn{n_hid_nodes}_{data_desc}"
 
     if plotting:
         fig, ax = plt.subplots()
@@ -194,6 +198,10 @@ if __name__ == "__main__":
         loss_v_all = torch.ones(n_epochs)
         loss_tst_all = torch.ones(n_epochs)
 
+        if recordlog:
+            with open(f'./Weights/{model_name}.csv','w') as f:
+                f.write('time,epoch,loss_t,loss_v\n')
+
         t_tr = time()
         for epoch in range(n_epochs):
             # if epoch%batch_step==0:
@@ -231,9 +239,13 @@ if __name__ == "__main__":
                 loss_v_all[epoch]=loss_v
                 loss_tst_all[epoch]=loss_tst
 
+            if recordlog:
+                with open(f'./Weights/{model_name}.csv','a') as f:
+                    f.write(f"{time()-t_tr},{epoch},{loss_t},{loss_v}\n")
+
             if loss_t < loss_v:
                 print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {loss_t}\tValidation loss: {loss_v}")
-                torch.save(model, f'./Weights/{model_name}')
+                torch.save(model, f'./Weights/{model_name}.pth')
         
         if verbose:
             print(f"Training time: {np.round(time()-t_tr,3)} s")
@@ -256,6 +268,9 @@ if __name__ == "__main__":
             
             plt.show()
 
+        
+
+
 
 
     # mode = 'test'
@@ -268,7 +283,7 @@ if __name__ == "__main__":
 
         criterion = nn.MSELoss()
 
-        model = torch.load(f'./Weights/{model_name}')
+        model = torch.load(f'./Weights/{model_name}.pth')
         t_tst = time()
         y_test_prd = model.forward(x_tst)
         loss_t = criterion(y_test_prd, y_tst)
