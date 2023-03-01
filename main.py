@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import Dataset as BaseDataset
 from torch.utils.data import DataLoader, random_split
 from torch import Tensor
@@ -41,14 +42,23 @@ def arg_parser():
 
 
 class FCN(nn.Module):
-    def __init__(self,m,h,n) -> None:
+    def __init__(self,m: int,h: int,n: int) -> None:
         super().__init__()
         self.L1 = nn.Linear(m, h, bias=True)
-        self.L2 = nn.Linear(h, n, bias=True)
+        self.L2 = nn.Linear(h, h, bias=True)
+        self.L3 = nn.Linear(h, n, bias=True)
 
     def forward(self,x: Tensor) -> Tensor:
-        out1 = self.L1(x)
-        return self.L2(out1)
+        x = self.L1(x)
+        x = F.relu(x) 
+        x = self.L2(x)
+        x = F.relu(x) 
+        return self.L3(x)
+    
+    def get_n_param(self):
+        total_params = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return total_params, trainable_params
 
 
 class Dataset(BaseDataset):
@@ -95,11 +105,11 @@ if __name__ == "__main__":
 
     x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
     # y = x + torch.rand([n_samples, 1])/10 - 0.05
-    y = np.sin(4*x) + torch.rand([n_samples, 1])/10 - 0.05
+    y = np.sin(10*x) + torch.rand([n_samples, 1])/10 - 0.05
 
     x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
     # y_tst = x_tst + torch.rand([int(n_samples/10), 1])/10 - 0.05
-    y_tst = np.sin(4*x_tst) + torch.rand([int(n_samples/10), 1])/10 - 0.05
+    y_tst = np.sin(10*x_tst) + torch.rand([int(n_samples/10), 1])/10 - 0.05
 
 
     x = x.to(device)
@@ -144,15 +154,22 @@ if __name__ == "__main__":
 
         # Model instantiation
         model = FCN(1,n_hid_nodes,1)
+
+                
         
-        model = model.to(device)
         if verbose:
+            print(f"Total parameters: \t{model.get_n_param()[0]}")
+            print(f"Trainable parameters: \t{model.get_n_param()[1]}\n")
+
+            print("Architecture:")
             print(model)
             total_params = sum(p.numel() for p in model.parameters())
             print(f"Total parameters: {total_params}")
 
 
-        
+        model = model.to(device)
+
+
         # Blind prediction
         y_hat = model(dataset.x[0:100])
 
@@ -200,8 +217,7 @@ if __name__ == "__main__":
             loss_tst_all[epoch]=loss_tst
 
             if loss_t < loss_v:
-                print(f"Saving the model at epoch = {epoch}")
-                print(f"Train loss: {loss_t}\tValidation loss: {loss_v}")
+                print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {loss_t}\tValidation loss: {loss_v}")
                 torch.save(model, f'./Weights/{model_name}')
 
         if plotting:
