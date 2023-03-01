@@ -9,11 +9,10 @@ from torch.utils.data import DataLoader, random_split
 from torch import Tensor
 
 import matplotlib.pyplot as plt
-
 import numpy as np
 from tqdm import tqdm
-
 import argparse
+from time import time
 
 def arg_parser():
     parser = argparse.ArgumentParser()
@@ -38,37 +37,46 @@ def arg_parser():
     return args
 
 
-
-
-
 class FCN(nn.Module):
     def __init__(self,m: int,h: int,n: int) -> None:
         super().__init__()
-        self.L1 = nn.Linear(m, h, bias=True)
+        # Setting bias = False diverges the net for sinosuidal data regression
+        self.Lin = nn.Linear(m, h, bias=True)
         self.L2 = nn.Linear(h, h, bias=True)
-        self.L3 = nn.Linear(h, n, bias=True)
+        self.Lout = nn.Linear(h, n, bias=True)
+
+        self.FLOPs = 2*m*n + 2*h*h + 2*h*n
 
     def forward(self,x: Tensor) -> Tensor:
-        x = self.L1(x)
-        x = F.relu(x) 
+        # For a sinosuidal regression problem, relu and tanh proved to be more effective
+        x = self.Lin(x)
+        x = torch.relu(x) 
+        # x = torch.tanh(x)
         x = self.L2(x)
-        x = F.relu(x) 
-        return self.L3(x)
+        x = torch.relu(x) 
+        # x = torch.tanh(x)
+        x = self.Lout(x)
+        # x = torch.relu(x) 
+        # x = torch.sigmoid(x)
+        return x
     
     def get_n_param(self):
         total_params = sum(p.numel() for p in self.parameters())
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return total_params, trainable_params
+    
+    def get_FLOPs(self):
+        return self.FLOPs
 
 
 class Dataset(BaseDataset):
-    def __init__(self,x,y) -> None:
+    def __init__(self,x: Tensor,y: Tensor) -> None:
         super().__init__()
         assert(x.shape[0]==y.shape[0])
         self.x = x
         self.y = y
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         return self.x[index], self.y[index]
 
     def __len__(self):
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     n_epochs = args.n_epochs
     mode = args.mode
     
-
+    # Learning rate between 1e-6 and 0.1
     lr = args.learning_rate
     momentum = args.momentum
     batch_size = args.batch_size
@@ -100,6 +108,7 @@ if __name__ == "__main__":
     
 
     # Data perparation
+    t_dp = time()
     # data_desc = 'linear'
     data_desc = 'sin'
 
@@ -131,6 +140,9 @@ if __name__ == "__main__":
     loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=True, num_workers=0)
     loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
 
+    if verbose:
+        print(f"Data preparation time: {np.round(time()-t_dp,3)} s")
+
 
     model_name = f"best_model_n{n_samples}_hn{n_hid_nodes}_{data_desc}.pth"
 
@@ -158,6 +170,7 @@ if __name__ == "__main__":
                 
         
         if verbose:
+            print(f"FLOPs : \t{model.get_FLOPs()}")
             print(f"Total parameters: \t{model.get_n_param()[0]}")
             print(f"Trainable parameters: \t{model.get_n_param()[1]}\n")
 
@@ -181,6 +194,7 @@ if __name__ == "__main__":
         loss_v_all = torch.ones(n_epochs)
         loss_tst_all = torch.ones(n_epochs)
 
+        t_tr = time()
         for epoch in range(n_epochs):
             # if epoch%batch_step==0:
                 # print(f"\nEpoch {epoch}\n")
@@ -212,13 +226,17 @@ if __name__ == "__main__":
 
             # if epoch%batch_step==0:
                 # print(f"Train loss: {loss_t}\tValidation loss: {loss_v}")
-            loss_t_all[epoch]=loss_t
-            loss_v_all[epoch]=loss_v
-            loss_tst_all[epoch]=loss_tst
+            if plotting:
+                loss_t_all[epoch]=loss_t
+                loss_v_all[epoch]=loss_v
+                loss_tst_all[epoch]=loss_tst
 
             if loss_t < loss_v:
                 print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {loss_t}\tValidation loss: {loss_v}")
                 torch.save(model, f'./Weights/{model_name}')
+        
+        if verbose:
+            print(f"Training time: {np.round(time()-t_tr,3)} s")
 
         if plotting:
             fig, ax = plt.subplots()
@@ -246,26 +264,19 @@ if __name__ == "__main__":
 
 
     elif mode == 'test':
-        # Data perparation
-        # x_tst = torch.linspace(0, 1, int(n_samples/10)).unsqueeze(-1)
-        # y_test = x_test + torch.rand([int(n_samples/10), 1])/10
-        # y_tst = x_tst 
 
-        # x_tst = x_tst.to(device)
-        # y_tst = y_tst.to(device)
-
-        # dataset_tst = Dataset(x_tst,y_tst)
-
-        # loader_tst = DataLoader(dataset_tst, batch_size=1, shuffle=True, num_workers=0)
 
         criterion = nn.MSELoss()
 
-
         model = torch.load(f'./Weights/{model_name}')
-
+        t_tst = time()
         y_test_prd = model.forward(x_tst)
         loss_t = criterion(y_test_prd, y_tst)
+        print(f"Testing loss: {loss_t}")
+        if verbose:
+            print(f"Testing time: {np.round(time()-t_tst,3)} s")
 
+        
         if plotting:
             fig, ax = plt.subplots()
             ax.grid = True
