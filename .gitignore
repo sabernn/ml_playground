@@ -1,5 +1,7 @@
 \Weights
 
+info.py
+
 *.pth
 *.csv
 *.xlsx
