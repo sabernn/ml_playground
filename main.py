@@ -14,6 +14,10 @@ from tqdm import tqdm
 import argparse
 from time import time
 
+import openai
+
+
+
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--n_samples', metavar = 'N', type = int, default = 10000, help = 'Number of training and validation samples')
