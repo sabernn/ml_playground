@@ -113,7 +113,17 @@ if __name__ == "__main__":
     verbose = args.verbose
     recordlog = args.recordlog
 
-    
+    if verbose:
+        print("###############################")
+        print("####### Hyperparameters #######")
+        print("###############################\n")
+        print(f"Number of samples:\t{n_samples}")
+        print(f"Number of hidden nodes:\t{n_hid_nodes}")
+        print(f"Number of epochs:\t{n_epochs}")
+        print(f"Momentum:\t\t{momentum}")
+        print(f"Batch size:\t\t{batch_size}")
+        print("\n###############################")
+
 
     # Data perparation
     t_dp = time()
