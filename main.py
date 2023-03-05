@@ -20,23 +20,30 @@ import openai
 
 def arg_parser():
     parser = argparse.ArgumentParser()
+    # Data-related parameters
     parser.add_argument('-n', '--n_samples', metavar = 'N', type = int, default = 10000, help = 'Number of training and validation samples')
     parser.add_argument('-tp', '--train_perc', metavar = 'Np', type = float, default = 0.8, help = 'Percentage of training samples from total number of samples')
-    parser.add_argument('-nt', '--n_test', metavar = 'Nh', type = int, default = 10, help = 'Number of hidden nodes at each hidden layer')
-    parser.add_argument('-ep', '--n_epochs', metavar = 'Ep', type = int, default = 200, help = 'Number of epochs')
-    parser.add_argument('-nhl', '--n_hid_layers', metavar = 'Nhl', type = int, default = 1, help = 'Number of hidden layers')
-    parser.add_argument('-nhn', '--n_hid_nodes', metavar = 'Nhn', type = int, default = 10, help = 'Number of nodes at each hidden layer')
-    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
-
-    parser.add_argument('-lr', '--learning_rate', metavar = 'Lr', type = float, default = 1e-4, help = 'Learning rate')
-    parser.add_argument('-mom', '--momentum', metavar = 'Mom', type = float, default = 0.9, help = 'Momentum')
+    parser.add_argument('-nt', '--n_test', metavar = 'Nh', type = int, default = 100, help = 'Number of test samples')
     parser.add_argument('-bs', '--batch_size', metavar = 'Bs', type = int, default = 200, help = 'Batch size')
 
-    parser.add_argument('-bstp', '--batch_step', metavar = 'Bstp', type = int, default = 10, help = 'Batch step for reporting when verbose is True')
+    # Network hyperparameters
+    parser.add_argument('-nhl', '--n_hid_layers', metavar = 'Nhl', type = int, default = 1, help = 'Number of hidden layers')
+    parser.add_argument('-nhn', '--n_hid_nodes', metavar = 'Nhn', type = int, default = 10, help = 'Number of nodes at each hidden layer')
 
+    # Training-related parameters
+    parser.add_argument('-ep', '--n_epochs', metavar = 'Ep', type = int, default = 200, help = 'Number of epochs')
+    parser.add_argument('-lr', '--learning_rate', metavar = 'Lr', type = float, default = 1e-4, help = 'Learning rate')
+    parser.add_argument('-mom', '--momentum', metavar = 'Mom', type = float, default = 0.9, help = 'Momentum')
+    
+    # Logging and reporting parameters
+    parser.add_argument('-bstp', '--batch_step', metavar = 'Bstp', type = int, default = 10, help = 'Batch step for reporting when verbose is True')
     parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = True, help = 'Plotting the data and results')
     parser.add_argument('-vrb', '--verbose', metavar = 'Vrb', type = bool, default = True, help = 'Reporting the performance during training and evaluation')
     parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
+
+    # Running parameters
+    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
+
 
     args = parser.parse_args()
     return args
@@ -114,15 +121,17 @@ if __name__ == "__main__":
     recordlog = args.recordlog
 
     if verbose:
-        print("###############################")
-        print("####### Hyperparameters #######")
-        print("###############################\n")
+        print(31*"#")
+        print(7*"#"+" Hyperparameters "+7*"#")
+        print(31*"#"+"\n")
+        print("Data:")
         print(f"Number of samples:\t{n_samples}")
+        print(f"Training data perc.:\t{args.train_perc}")
         print(f"Number of hidden nodes:\t{n_hid_nodes}")
         print(f"Number of epochs:\t{n_epochs}")
         print(f"Momentum:\t\t{momentum}")
         print(f"Batch size:\t\t{batch_size}")
-        print("\n###############################")
+        print("\n"+31*"#")
 
 
     # Data perparation
@@ -148,7 +157,7 @@ if __name__ == "__main__":
     dataset_tst = Dataset(x_tst,y_tst)
 
     
-    dataset_trn_size = int(n_samples * 0.8)
+    dataset_trn_size = int(n_samples * args.train_perc)
     dataset_val_size = n_samples - dataset_trn_size
     dataset_trn, dataset_val = random_split(dataset, [dataset_trn_size, dataset_val_size])
     
