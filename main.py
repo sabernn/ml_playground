@@ -22,7 +22,7 @@ def arg_parser():
     parser = argparse.ArgumentParser()
     # Data-related parameters
     parser.add_argument('-n', '--n_samples', metavar = 'N', type = int, default = 10000, help = 'Number of training and validation samples')
-    parser.add_argument('-tp', '--train_perc', metavar = 'Np', type = float, default = 0.8, help = 'Percentage of training samples from total number of samples')
+    parser.add_argument('-sp', '--split', metavar = 'Sp', type = float, default = 0.8, help = 'Training-validation split')
     parser.add_argument('-nt', '--n_test', metavar = 'Nh', type = int, default = 100, help = 'Number of test samples')
     parser.add_argument('-bs', '--batch_size', metavar = 'Bs', type = int, default = 200, help = 'Batch size')
 
@@ -47,6 +47,30 @@ def arg_parser():
 
     args = parser.parse_args()
     return args
+
+def print_hypers(args):
+    print(39*"#")
+    print(11*"#"+" Hyperparameters "+11*"#")
+    print(39*"#"+"\n")
+
+    
+    print("DATA:")
+    print(f"Number of samples:\t\t{args.n_samples}")
+    print(f"Training-validation split:\t{args.split}-{round(1.0-args.split,2)}")
+    print(f"Batch size:\t\t\t{args.batch_size}")
+
+    print("\nNETWORK:")
+    print(f"Number of hidden layers:\t{args.n_hid_layers}")
+    print(f"Number of hidden nodes:\t\t{args.n_hid_nodes}")
+
+
+    print("\nTRAINING:")
+    print(f"Mode:\t\t\t\t{args.mode}")
+    print(f"Number of epochs:\t\t{args.n_epochs}")
+    print(f"Momentum:\t\t\t{args.momentum}")
+    
+    print("\n"+39*"#")
+
 
 
 class FCN(nn.Module):
@@ -106,6 +130,7 @@ if __name__ == "__main__":
 
     # Inputs
     n_samples = args.n_samples
+    n_hid_layers = args.n_hid_layers
     n_hid_nodes = args.n_hid_nodes
     n_epochs = args.n_epochs
     mode = args.mode
@@ -121,17 +146,7 @@ if __name__ == "__main__":
     recordlog = args.recordlog
 
     if verbose:
-        print(31*"#")
-        print(7*"#"+" Hyperparameters "+7*"#")
-        print(31*"#"+"\n")
-        print("Data:")
-        print(f"Number of samples:\t{n_samples}")
-        print(f"Training data perc.:\t{args.train_perc}")
-        print(f"Number of hidden nodes:\t{n_hid_nodes}")
-        print(f"Number of epochs:\t{n_epochs}")
-        print(f"Momentum:\t\t{momentum}")
-        print(f"Batch size:\t\t{batch_size}")
-        print("\n"+31*"#")
+        print_hypers(args= args)
 
 
     # Data perparation
@@ -157,7 +172,7 @@ if __name__ == "__main__":
     dataset_tst = Dataset(x_tst,y_tst)
 
     
-    dataset_trn_size = int(n_samples * args.train_perc)
+    dataset_trn_size = int(n_samples * args.split)
     dataset_val_size = n_samples - dataset_trn_size
     dataset_trn, dataset_val = random_split(dataset, [dataset_trn_size, dataset_val_size])
     
