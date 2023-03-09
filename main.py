@@ -270,6 +270,14 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
         output.append(model.loss_t_all)
 
 
+def generate_sin(n_samples,a = 1,omg = 10,phi = 0, noise = True):
+    data_desc = 'sin'
+    x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
+    y = a * np.sin(omg*(x-phi)) + int(noise) * torch.rand([n_samples, 1])/10 - 0.05
+
+    return x,y,data_desc
+
+
 if __name__ == "__main__":
 
     # Input parameters
@@ -286,15 +294,18 @@ if __name__ == "__main__":
     # Data perparation
     t_dp = time()
     # data_desc = 'linear'
-    data_desc = 'sin'
+    # data_desc = 'sin'
 
-    x = torch.linspace(0, 1, args.n_samples).unsqueeze(-1)
+    # x = torch.linspace(0, 1, args.n_samples).unsqueeze(-1)
     # y = x + torch.rand([n_samples, 1])/10 - 0.05
-    y = np.sin(10*x) + torch.rand([args.n_samples, 1])/10 - 0.05
+    # y = np.sin(10*x) + torch.rand([args.n_samples, 1])/10 - 0.05
 
-    x_tst = torch.linspace(0, 1, int(args.n_samples/10)).unsqueeze(-1)
+    x,y,data_desc = generate_sin(args.n_samples)
+    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10))
+
+    # x_tst = torch.linspace(0, 1, int(args.n_samples/10)).unsqueeze(-1)
     # y_tst = x_tst + torch.rand([int(n_samples/10), 1])/10 - 0.05
-    y_tst = np.sin(10*x_tst) + torch.rand([int(args.n_samples/10), 1])/10 - 0.05
+    # y_tst = np.sin(10*x_tst) + torch.rand([int(args.n_samples/10), 1])/10 - 0.05
 
 
     x = x.to(args.device)
