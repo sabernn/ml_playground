@@ -194,6 +194,9 @@ class Dataset(BaseDataset):
     def __len__(self):
         return len(self.x)
 
+
+
+
 def arg_parser():
     parser = argparse.ArgumentParser()
     # Data-related parameters
@@ -265,15 +268,34 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
             # # Model instantiation
             # model = FCN(1,args.n_hid_nodes,1)
 
-            model.train(datapack= datapack, args = args, device= args.device, name_appnd= model_name_append)
+            model.train(datapack= datapack, args = args, name_appnd= model_name_append)
 
         output.append(model.loss_t_all)
 
 
-def generate_sin(n_samples,a = 1,omg = 10,phi = 0, noise = True):
+def generate_sin(n_samples,a = 1,omg = 10,phi = 0, b = 0, noise_factor = 0.1, device = "cuda:0"):
+    '''
+    Generate sinosouidal function y = a * sin(omg * (x - phi)) + b + Noise
+    '''
     data_desc = 'sin'
     x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
-    y = a * np.sin(omg*(x-phi)) + int(noise) * torch.rand([n_samples, 1])/10 - 0.05
+    y = a * torch.sin(omg*(x-phi)) + b + noise_factor * (torch.rand([n_samples, 1]) - 0.5)
+
+    x = x.to(device)
+    y = y.to(device)
+
+    return x,y,data_desc
+
+def generate_lin(n_samples, m = 1, h = 0, noise_factor = 0.1, device = "cuda:0"):
+    '''
+    Generate linear function y = m * x + h + Noise
+    '''
+    data_desc = 'lin'
+    x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
+    y = m * x + h + noise_factor * (torch.rand([n_samples, 1]) - 0.5)
+
+    x = x.to(device)
+    y = y.to(device)
 
     return x,y,data_desc
 
@@ -293,26 +315,14 @@ if __name__ == "__main__":
 
     # Data perparation
     t_dp = time()
-    # data_desc = 'linear'
-    # data_desc = 'sin'
 
-    # x = torch.linspace(0, 1, args.n_samples).unsqueeze(-1)
-    # y = x + torch.rand([n_samples, 1])/10 - 0.05
-    # y = np.sin(10*x) + torch.rand([args.n_samples, 1])/10 - 0.05
+    # x,y,data_desc = generate_sin(args.n_samples, device= args.device)
+    # x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
 
-    x,y,data_desc = generate_sin(args.n_samples)
-    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10))
+    x,y,data_desc = generate_lin(args.n_samples, device= args.device)
+    x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
 
-    # x_tst = torch.linspace(0, 1, int(args.n_samples/10)).unsqueeze(-1)
-    # y_tst = x_tst + torch.rand([int(n_samples/10), 1])/10 - 0.05
-    # y_tst = np.sin(10*x_tst) + torch.rand([int(args.n_samples/10), 1])/10 - 0.05
-
-
-    x = x.to(args.device)
-    y = y.to(args.device)
-    x_tst = x_tst.to(args.device)
-    y_tst = y_tst.to(args.device)
-
+    # Dataset object instantiation
     dataset = Dataset(x,y)
     dataset_tst = Dataset(x_tst,y_tst)
     
@@ -345,22 +355,22 @@ if __name__ == "__main__":
 
     # model = FCN(1,args.n_hid_nodes,1)
 
-    # output = sweep_study(
-    #             args= args,
-    #             datapack= datapack,
-    #             param_name="learning_rate",
-    #             range= [1,0.1,0.01,0.001,0.0001],
-    #             output_param= "loss_t_all")
-    
-    model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{data_desc}"
-    
-    model = FCN(1,args.n_hid_nodes,1)
-    model.train(datapack=datapack,
+    output = sweep_study(
                 args= args,
-                name_appnd=model_name_append)
-    model.test(loader_tst= loader_tst,
-               args= args,
-               name_appnd= model_name_append)
+                datapack= datapack,
+                param_name="learning_rate",
+                range= [1,0.1,0.01,0.001,0.0001],
+                output_param= "loss_t_all")
+    
+    # model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{data_desc}"
+    
+    # model = FCN(1,args.n_hid_nodes,1)
+    # model.train(datapack=datapack,
+    #             args= args,
+    #             name_appnd=model_name_append)
+    # model.test(loader_tst= loader_tst,
+    #            args= args,
+    #            name_appnd= model_name_append)
     
 
     print("The end")
