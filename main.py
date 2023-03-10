@@ -17,8 +17,6 @@ from time import time
 import openai
 
 
-
-
 class FCN(nn.Module):
     def __init__(self,m: int,nhn: int,n: int) -> None:
         super().__init__()
@@ -32,6 +30,9 @@ class FCN(nn.Module):
         self.FLOPs = 2*m*n + 2*nhn*nhn + 2*nhn*n
 
         self.loss_t_all = None
+        self.loss_tst_all = None
+
+        self.name = "FCN-best_model-"
 
     def forward(self,x: Tensor) -> Tensor:
         # For a sinosuidal regression problem, relu and tanh proved to be more effective
@@ -55,7 +56,7 @@ class FCN(nn.Module):
         return self.FLOPs
     
     def train(self, datapack: list, args, name_appnd: str):
-        self.name = f"FCN-best_model-{name_appnd}"
+        self.name += name_appnd
 
         loader_trn = datapack[0]
         loader_val = datapack[1]
@@ -148,15 +149,18 @@ class FCN(nn.Module):
     
 
     def test(self, loader_tst, args, name_appnd: str):
+        self.name += name_appnd
+
         criterion = nn.MSELoss()
 
         model = torch.load(f'./Weights/{self.name}.pth')
+        model = model.to(args.device)
         t_tst = time()
         # testing
         for x, y in loader_tst:
-            x, y = x.to(args.device), y.to(args.device)
+            # x, y = x.to(args.device), y.to(args.device)
             with torch.no_grad():
-                prediction = self.forward(x)
+                prediction = model.forward(x)
                 loss_tst = criterion(prediction, y)
         y_test_prd = model.forward(x_tst)
         loss_t = criterion(y_test_prd, y_tst)
@@ -193,8 +197,6 @@ class Dataset(BaseDataset):
 
     def __len__(self):
         return len(self.x)
-
-
 
 
 def arg_parser():
@@ -257,7 +259,9 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
         print(f"{param_name} changed to {args.param_name}")
 
         # Model instantiation
-        model = FCN(1,args.n_hid_nodes,1)
+        input_dim = datapack[0].dataset.dataset.x.shape[1]
+        output_dim = datapack[0].dataset.dataset.y.shape[1]
+        model = FCN(input_dim,args.n_hid_nodes,output_dim)
 
         model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{param_name}{args.param_name}-{data_desc}"
 
@@ -270,8 +274,13 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
 
             model.train(datapack= datapack, args = args, name_appnd= model_name_append)
 
-        output.append(model.loss_t_all)
+            output.append(model.loss_t_all)
 
+        elif args.mode == 'test':
+
+            model.test(loader_tst=datapack[2], args= args, name_appnd= model_name_append)
+
+            output.append(model.loss_tst_all)
 
 def generate_sin(n_samples,a = 1,omg = 10,phi = 0, b = 0, noise_factor = 0.1, device = "cuda:0"):
     '''
@@ -279,7 +288,9 @@ def generate_sin(n_samples,a = 1,omg = 10,phi = 0, b = 0, noise_factor = 0.1, de
     '''
     data_desc = 'sin'
     x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
+    
     y = a * torch.sin(omg*(x-phi)) + b + noise_factor * (torch.rand([n_samples, 1]) - 0.5)
+    # x = torch.cat((x,x),1)
 
     x = x.to(device)
     y = y.to(device)
@@ -293,6 +304,7 @@ def generate_lin(n_samples, m = 1, h = 0, noise_factor = 0.1, device = "cuda:0")
     data_desc = 'lin'
     x = torch.linspace(0, 1, n_samples).unsqueeze(-1)
     y = m * x + h + noise_factor * (torch.rand([n_samples, 1]) - 0.5)
+    x = torch.cat((x,x),1)
 
     x = x.to(device)
     y = y.to(device)
@@ -312,15 +324,14 @@ if __name__ == "__main__":
     if args.verbose:
         print_hypers(args= args)
 
-
     # Data perparation
     t_dp = time()
 
-    # x,y,data_desc = generate_sin(args.n_samples, device= args.device)
-    # x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
+    x,y,data_desc = generate_sin(args.n_samples, device= args.device)
+    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
 
-    x,y,data_desc = generate_lin(args.n_samples, device= args.device)
-    x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
+    # x,y,data_desc = generate_lin(args.n_samples, device= args.device)
+    # x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
 
     # Dataset object instantiation
     dataset = Dataset(x,y)
@@ -358,8 +369,8 @@ if __name__ == "__main__":
     output = sweep_study(
                 args= args,
                 datapack= datapack,
-                param_name="learning_rate",
-                range= [1,0.1,0.01,0.001,0.0001],
+                param_name="n_hid_nodes",
+                range= [1,5,10,50],
                 output_param= "loss_t_all")
     
     # model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{data_desc}"
