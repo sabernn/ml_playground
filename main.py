@@ -11,8 +11,10 @@ from torch import Tensor
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+import cv2
 import argparse
 from time import time
+import os
 
 import openai
 
@@ -311,6 +313,44 @@ def generate_lin(n_samples, m = 1, h = 0, noise_factor = 0.1, device = "cuda:0")
 
     return x,y,data_desc
 
+def load_img(args ,mode = 'train', dataset_name = 'zeiss', flatten = True):
+    '''
+    Load image segmentation dataset.
+    Data structure:
+    data
+      |-segzesiss
+        |-train
+          |-image
+          |-mask
+        |-test
+          |-image
+          |-mask
+
+    '''
+    data_desc = 'img_'+dataset_name
+
+    # This folder should include image and mask subfolders
+    data_dir = "./data/" + dataset_name + "/" + mode
+    image_dir = os.path.join(data_dir,'image')
+    mask_dir = os.path.join(data_dir,'mask')
+
+    ids = os.listdir(image_dir)
+    x_fps = [os.path.join(image_dir, image_id) for image_id in ids]
+    y_fps = [os.path.join(mask_dir, image_id) for image_id in ids]
+
+    x = torch.tensor([cv2.imread(i) for i in x_fps],dtype=torch.float32)
+    y = torch.tensor([cv2.imread(i) for i in y_fps],dtype=torch.float32)
+
+    if flatten:
+        x = x.flatten().unsqueeze(-1)
+        y = y.flatten().unsqueeze(-1)
+
+    x = x.to(args.device)
+    y = y.to(args.device)
+
+    return x,y,data_desc
+
+
 
 if __name__ == "__main__":
 
@@ -327,8 +367,13 @@ if __name__ == "__main__":
     # Data perparation
     t_dp = time()
 
-    x,y,data_desc = generate_sin(args.n_samples, device= args.device)
-    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
+    x,y,data_desc = load_img(args, mode= 'train', dataset_name= 'zeiss0')
+    x_tst,y_tst,data_desc_tst = load_img(args, mode= 'test', dataset_name= 'zeiss0')
+
+    args.n_samples = x.shape[0]
+
+    # x,y,data_desc = generate_sin(args.n_samples, device= args.device)
+    # x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
 
     # x,y,data_desc = generate_lin(args.n_samples, device= args.device)
     # x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
@@ -370,7 +415,7 @@ if __name__ == "__main__":
                 args= args,
                 datapack= datapack,
                 param_name="n_hid_nodes",
-                range= [1,5,10,50],
+                range= [1],
                 output_param= "loss_t_all")
     
     # model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{data_desc}"
