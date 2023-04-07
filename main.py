@@ -26,6 +26,7 @@ class FCN(nn.Module):
         self.Lin = nn.Linear(m, nhn, bias=True)
         # TO DO: OrderedDict for nn.Sequential
         self.LH = nn.Linear(nhn, nhn, bias=True)
+        self.LH2 = nn.Linear(nhn, nhn, bias=True)
         self.Lout = nn.Linear(nhn, n, bias=True)
 
 
@@ -44,6 +45,8 @@ class FCN(nn.Module):
         x = self.LH(x)
         x = torch.relu(x) 
         # x = torch.tanh(x)
+        x = self.LH2(x)
+        x = torch.relu(x) 
         x = self.Lout(x)
         # x = torch.relu(x) 
         # x = torch.sigmoid(x)
@@ -170,20 +173,31 @@ class FCN(nn.Module):
         if args.verbose:
             print(f"Testing time: {np.round(time()-t_tst,3)} s")
 
-        
+
         if args.plotting:
             fig, ax = plt.subplots()
             ax.grid = True
-            ax.plot(dataset_tst[:][0].cpu().numpy(),
-                    dataset_tst[:][1].cpu().numpy(),'*')
+
+            xx = dataset_tst[:][0].squeeze(-1).unflatten(0,[256,256])
+            yy = dataset_tst[:][1].squeeze(-1).unflatten(0,[256,256])
+            yy_prd = y_test_prd.squeeze(-1).unflatten(0,[256,256])
+            # ax.plot(dataset_tst[:][0].cpu().numpy(),
+            #         dataset_tst[:][1].cpu().numpy(),'*')
             
-            ax.plot(dataset_tst[:][0].cpu().numpy(),
-                    y_test_prd.cpu().detach().numpy(),'o')
+            # ax.plot(dataset_tst[:][0].cpu().numpy(),
+            #         y_test_prd.cpu().detach().numpy(),'o')
+
+            plt.subplot(1,3,1)
+            plt.imshow(xx.cpu().numpy())
+            plt.subplot(1,3,2)
+            plt.imshow(yy.cpu().numpy())
+            plt.subplot(1,3,3)
+            plt.imshow(yy_prd.cpu().detach().numpy())
             
-            ax.set_xlabel('X')
-            ax.set_ylabel('Y')
-            ax.legend = True
-            ax.set_title("Test Data")
+            # ax.set_xlabel('X')
+            # ax.set_ylabel('Y')
+            # ax.legend = True
+            # ax.set_title("Test Data")
             plt.show()
 
 
@@ -226,7 +240,7 @@ def arg_parser():
     parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
 
     # Running parameters
-    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
+    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'test', help = 'train or test')
 
 
     args = parser.parse_args()
@@ -284,6 +298,8 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
 
             output.append(model.loss_tst_all)
 
+        return output
+
 def generate_sin(n_samples,a = 1,omg = 10,phi = 0, b = 0, noise_factor = 0.1, device = "cuda:0"):
     '''
     Generate sinosouidal function y = a * sin(omg * (x - phi)) + b + Noise
@@ -331,6 +347,7 @@ def load_img(args ,mode = 'train', dataset_name = 'zeiss', flatten = True):
 
     # This folder should include image and mask subfolders
     data_dir = "./data/" + dataset_name + "/" + mode
+    # The following two folders should include images and masks with the exact same name
     image_dir = os.path.join(data_dir,'image')
     mask_dir = os.path.join(data_dir,'mask')
 
@@ -338,8 +355,8 @@ def load_img(args ,mode = 'train', dataset_name = 'zeiss', flatten = True):
     x_fps = [os.path.join(image_dir, image_id) for image_id in ids]
     y_fps = [os.path.join(mask_dir, image_id) for image_id in ids]
 
-    x = torch.tensor([cv2.imread(i) for i in x_fps],dtype=torch.float32)
-    y = torch.tensor([cv2.imread(i) for i in y_fps],dtype=torch.float32)
+    x = torch.tensor([cv2.imread(i, cv2.IMREAD_GRAYSCALE) for i in x_fps],dtype=torch.float32)
+    y = torch.tensor([cv2.imread(i, cv2.IMREAD_GRAYSCALE) for i in y_fps],dtype=torch.float32)
 
     if flatten:
         x = x.flatten().unsqueeze(-1)
@@ -415,8 +432,9 @@ if __name__ == "__main__":
                 args= args,
                 datapack= datapack,
                 param_name="n_hid_nodes",
-                range= [1],
+                range= [1,10,100],
                 output_param= "loss_t_all")
+    
     
     # model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{data_desc}"
     
