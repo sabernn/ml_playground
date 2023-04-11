@@ -128,7 +128,7 @@ class FCN(nn.Module):
                     f.write(f"{time()-t_tr},{epoch},{loss_t},{loss_v}\n")
 
             if loss_t < loss_v:
-                print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {loss_t}\tValidation loss: {loss_v}")
+                print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {np.round(loss_t.cpu().detach().numpy(),10)}\t\tValidation loss: {np.round(loss_v.cpu().detach().numpy(),10)}")
                 torch.save(self, f'./Weights/{self.name}.pth')
         
         if args.verbose:
