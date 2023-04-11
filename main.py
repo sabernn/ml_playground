@@ -128,7 +128,8 @@ class FCN(nn.Module):
                     f.write(f"{time()-t_tr},{epoch},{loss_t},{loss_v}\n")
 
             if loss_t < loss_v:
-                print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {np.round(loss_t.cpu().detach().numpy(),10)}\t\tValidation loss: {np.round(loss_v.cpu().detach().numpy(),10)}")
+                print(f"Saving the model at epoch = {epoch}:  \tTrain loss: {loss_t:.10f}\tValidation loss: {loss_v:.10f}")
+                # print("Saving the model at epoch =  {%d}:  \t Train loss: {%.5f} \t\t Validation loss: {%.5f}".format(epoch,loss_t,loss_v))
                 torch.save(self, f'./Weights/{self.name}.pth')
         
         if args.verbose:
@@ -240,7 +241,7 @@ def arg_parser():
     parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
 
     # Running parameters
-    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'test', help = 'train or test')
+    parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
 
 
     args = parser.parse_args()
@@ -271,15 +272,16 @@ def print_hypers(args):
 
 def sweep_study(args, datapack, param_name: str, range: list, output_param):
     
-    for args.param_name in range:
-        print(f"{param_name} changed to {args.param_name}")
+    for nhn in range:
+        print(f"{param_name} changed to {nhn}")
 
         # Model instantiation
         input_dim = datapack[0].dataset.dataset.x.shape[1]
         output_dim = datapack[0].dataset.dataset.y.shape[1]
-        model = FCN(input_dim,args.n_hid_nodes,output_dim)
+        # model = FCN(input_dim,args.n_hid_nodes,output_dim)
+        model = FCN(input_dim,nhn,output_dim)
 
-        model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{param_name}{args.param_name}-{data_desc}"
+        model_name_append = f"n{args.n_samples}-nhn{args.n_hid_nodes}-{param_name}{nhn}-{data_desc}"
 
         output = []
 
@@ -298,7 +300,7 @@ def sweep_study(args, datapack, param_name: str, range: list, output_param):
 
             output.append(model.loss_tst_all)
 
-        return output
+    return output
 
 def generate_sin(n_samples,a = 1,omg = 10,phi = 0, b = 0, noise_factor = 0.1, device = "cuda:0"):
     '''
