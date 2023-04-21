@@ -107,7 +107,7 @@ class FCN(nn.Module):
                 optimizer.step()
             
             # validation
-            for x, y in loader_val:
+            for x, y in tqdm(loader_val):
                 # optimizer.zero_grad()
                 x, y = x.to(args.device), y.to(args.device)
                 with torch.no_grad():
