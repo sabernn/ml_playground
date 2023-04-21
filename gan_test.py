@@ -193,5 +193,20 @@ for epoch in range(n_epochs):
         optimizer_D.step()
 
 
+        sample_z_in_train = Tensor(np.random.normal(0, 1, (imgs.shape[0], latent_dim)))
+        sample_gen_imgs_in_train = generator(sample_z_in_train).detach().cpu()
+
+        if ((i+1)%200) == 0:
+            nrows = 1
+            ncols = 5
+            fig, axes = plt.subplots(nrows, ncols, figsize=(8, 2))
+            plt.suptitle('EPOCH : {} | BATCH(ITERATION) : {}'.format(epoch+1, i+1))
+            for ncol in range(ncols):
+                axes[ncol].imshow(sample_gen_imgs_in_train.permute(0,2,3,1)[ncol], cmap='gray')
+                axes[ncol].axis('off')
+            plt.show()
+
+    print('Epoch : {} | Generator loss : {} | Discriminator loss : {}'.format(epoch+1, g_loss, d_loss))
+
 
 
