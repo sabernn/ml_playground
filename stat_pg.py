@@ -32,10 +32,10 @@ def generate_crack():
 
 if __name__ == '__main__':
     crack,x,y,img = generate_crack()
-    plt.plot(crack)
-    plt.show()
-    plt.plot(x,y)
-    plt.show()
+    # plt.plot(crack)
+    # plt.show()
+    # plt.plot(x,y)
+    # plt.show()
     plt.imshow(img*255)
     plt.show()
 
