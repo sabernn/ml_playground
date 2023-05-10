@@ -1,4 +1,15 @@
+'''
 
+Hyperparameters for future RL-based fine-tuning: 
+    [hidden layer sequence,     can be [1], [1,1], [10, 10], so on
+    activation function,        can be relu, tanh, sigmoid, so on
+    optimizer,                  can be Adam, SGD, so on
+    learning rate,              can be 0.1, 0.01, 0.001, so on
+    momentum,                   can be 0.9, 0.8, 0.7, so on
+    batch size,                 can be 10, 20, 50, so on
+    loss function]              can be MSE, MAE, so on
+
+'''
 
 import torch
 import torch.nn as nn
@@ -48,7 +59,7 @@ class FCN(nn.Module):
     def forward(self,x: Tensor) -> Tensor:
         # For a sinosuidal regression problem, relu and tanh proved to be more effective
         x = self.Lin(x)
-        x = torch.relu(x) 
+        x = torch.relu(x)
         # x = torch.tanh(x)
         x = self.LH(x)
         x = torch.relu(x) 
@@ -56,7 +67,7 @@ class FCN(nn.Module):
         x = self.LH2(x)
         x = torch.relu(x) 
         x = self.Lout(x)
-        # x = torch.relu(x) 
+        x = torch.relu(x) 
         # x = torch.sigmoid(x)
         return x
     
@@ -396,16 +407,17 @@ if __name__ == "__main__":
     # Data perparation
     t_dp = time()
 
-    x,y,data_desc = load_img(args, mode= 'train', dataset_name= 'zeiss0')
-    x_tst,y_tst,data_desc_tst = load_img(args, mode= 'test', dataset_name= 'zeiss0')
+    # x,y,data_desc = load_img(args, mode= 'train', dataset_name= 'zeiss0')
+    # x_tst,y_tst,data_desc_tst = load_img(args, mode= 'test', dataset_name= 'zeiss0')
 
-    args.n_samples = x.shape[0]
 
-    # x,y,data_desc = generate_sin(args.n_samples, device= args.device)
-    # x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), device= args.device)
+    x,y,data_desc = generate_sin(args.n_samples, omg=3, device= args.device)
+    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), omg=3, device= args.device)
 
     # x,y,data_desc = generate_lin(args.n_samples, device= args.device)
     # x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
+
+    args.n_samples = x.shape[0]
 
     # Dataset object instantiation
     dataset = Dataset(x,y)
@@ -444,7 +456,7 @@ if __name__ == "__main__":
                 args= args,
                 datapack= datapack,
                 param_name="n_hid_nodes",
-                range= [1,10,100],
+                range= [10],
                 output_param= "loss_t_all")
     
     
