@@ -20,17 +20,25 @@ import openai
 
 
 class FCN(nn.Module):
-    def __init__(self,m: int,nhn: int,n: int) -> None:
+    def __init__(self,in_features: int,nhn: int,out_features: int) -> None:
+        '''
+        Fully connected neural network
+        params:
+            in_features: number of input features
+            nhn: number of hidden nodes
+            out_features: number of output features
+        return: None
+        '''
         super().__init__()
         # Setting bias = False diverges the net for sinosuidal data regression
-        self.Lin = nn.Linear(m, nhn, bias=True)
+        self.Lin = nn.Linear(in_features, nhn, bias=True)
         # TO DO: OrderedDict for nn.Sequential
         self.LH = nn.Linear(nhn, nhn, bias=True)
         self.LH2 = nn.Linear(nhn, nhn, bias=True)
-        self.Lout = nn.Linear(nhn, n, bias=True)
+        self.Lout = nn.Linear(nhn, out_features, bias=True)
 
 
-        self.FLOPs = 2*m*n + 2*nhn*nhn + 2*nhn*n
+        self.FLOPs = 2*in_features*out_features + 2*nhn*nhn + 2*nhn*out_features
 
         self.loss_t_all = None
         self.loss_tst_all = None
@@ -243,8 +251,16 @@ def arg_parser():
     # Running parameters
     parser.add_argument('-md', '--mode', metavar = 'Md', type = str, default = 'train', help = 'train or test')
 
-
     args = parser.parse_args()
+
+
+    # GPU
+    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {args.device}")
+
+    if args.verbose:
+        print_hypers(args= args)
+
     return args
 
 def print_hypers(args):
@@ -264,6 +280,7 @@ def print_hypers(args):
 
 
     print("\nTRAINING:")
+    print(f"Device:\t\t\t\t{args.device}")
     print(f"Mode:\t\t\t\t{args.mode}")
     print(f"Number of epochs:\t\t{args.n_epochs}")
     print(f"Momentum:\t\t\t{args.momentum}")
@@ -375,14 +392,7 @@ if __name__ == "__main__":
 
     # Input parameters
     args = arg_parser()
-
-    # GPU
-    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {args.device}")
-
-    if args.verbose:
-        print_hypers(args= args)
-
+    
     # Data perparation
     t_dp = time()
 

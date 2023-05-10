@@ -161,7 +161,7 @@ from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 
-n_epochs = 10
+n_epochs = 50
 
 
 for epoch in range(n_epochs):
@@ -196,7 +196,7 @@ for epoch in range(n_epochs):
         sample_z_in_train = Tensor(np.random.normal(0, 1, (imgs.shape[0], latent_dim)))
         sample_gen_imgs_in_train = generator(sample_z_in_train).detach().cpu()
 
-        if ((i+1)%200) == 0:
+        if ((i+1)%500) == 0:
             nrows = 1
             ncols = 5
             fig, axes = plt.subplots(nrows, ncols, figsize=(8, 2))
