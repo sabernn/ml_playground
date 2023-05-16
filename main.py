@@ -235,6 +235,7 @@ class Dataset(BaseDataset):
         return len(self.x)
 
 
+
 def arg_parser():
     parser = argparse.ArgumentParser()
     # Data-related parameters
@@ -267,7 +268,7 @@ def arg_parser():
 
     # GPU
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {args.device}")
+    # print(f"Device: {args.device}")
 
     if args.verbose:
         print_hypers(args= args)
@@ -397,10 +398,30 @@ def load_img(args ,mode = 'train', dataset_name = 'zeiss', flatten = True):
 
     return x,y,data_desc
 
-
+def generate_circles(n_samples: int, n_circles: int, img_size: int, device = "cuda:0"):
+    '''
+    Generate n_samples images with circles with random radius and location inside.
+    '''
+    data_desc = 'circles'
+    output = torch.zeros((n_samples,img_size,img_size))
+    img = np.zeros((img_size,img_size))
+    for j in range(n_samples):
+        for i in range(n_circles):
+            r = np.random.randint(0, img_size/10)
+            x = np.random.randint(0, img_size)
+            y = np.random.randint(0, img_size)
+            cv2.circle(img, (x,y), r, 1, -1)
+        output[j] = torch.Tensor(img)
+    x = output*255
+    y = output*1
+    x = x.to(device)
+    y = y.to(device)
+    return x, y, data_desc
 
 if __name__ == "__main__":
 
+
+    
     # Input parameters
     args = arg_parser()
     
@@ -411,11 +432,14 @@ if __name__ == "__main__":
     # x_tst,y_tst,data_desc_tst = load_img(args, mode= 'test', dataset_name= 'zeiss0')
 
 
-    x,y,data_desc = generate_sin(args.n_samples, omg=3, device= args.device)
-    x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), omg=3, device= args.device)
+    # x,y,data_desc = generate_sin(args.n_samples, omg=3, device= args.device)
+    # x_tst,y_tst,data_desc_tst = generate_sin(int(args.n_samples/10), omg=3, device= args.device)
 
     # x,y,data_desc = generate_lin(args.n_samples, device= args.device)
     # x_tst,y_tst,data_desc_tst = generate_lin(int(args.n_samples/10), device= args.device)
+
+    x,y,data_desc = generate_circles(args.n_samples, 10, 64, device= args.device)
+    x_tst,y_tst,data_desc_tst = generate_circles(int(args.n_samples/10), 10, 64, device= args.device)
 
     args.n_samples = x.shape[0]
 
