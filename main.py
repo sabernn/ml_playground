@@ -256,7 +256,7 @@ def arg_parser():
     
     # Logging and reporting parameters
     parser.add_argument('-bstp', '--batch_step', metavar = 'Bstp', type = int, default = 10, help = 'Batch step for reporting when verbose is True')
-    parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = True, help = 'Plotting the data and results')
+    parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = False, help = 'Plotting the data and results')
     parser.add_argument('-vrb', '--verbose', metavar = 'Vrb', type = bool, default = True, help = 'Reporting the performance during training and evaluation')
     parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
 
