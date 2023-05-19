@@ -256,7 +256,7 @@ def arg_parser():
     
     # Logging and reporting parameters
     parser.add_argument('-bstp', '--batch_step', metavar = 'Bstp', type = int, default = 10, help = 'Batch step for reporting when verbose is True')
-    parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = False, help = 'Plotting the data and results')
+    parser.add_argument('-plt', '--plotting', metavar = 'Plt', type = bool, default = True, help = 'Plotting the data and results')
     parser.add_argument('-vrb', '--verbose', metavar = 'Vrb', type = bool, default = True, help = 'Reporting the performance during training and evaluation')
     parser.add_argument('-rcl', '--recordlog', metavar = 'Rcl', type = bool, default = True, help = 'Record log in a csv file')
 
@@ -461,18 +461,19 @@ if __name__ == "__main__":
         print(f"Data preparation time: {np.round(time()-t_dp,3)} s")
 
     if args.plotting:
-        fig, ax = plt.subplots()
-        ax.plot(dataset_trn[:][0].cpu().numpy(),
-                dataset_trn[:][1].cpu().numpy(),'*')
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.legend = True
-        ax.set_title("Training Data")
-        
-        # ax.plot(dataset_val[:][0].cpu().numpy(),
-        #         dataset_val[:][1].cpu().numpy(),'o')
-        
-        plt.show()
+        if len(dataset_trn[:][1].shape)==2:
+            fig, ax = plt.subplots()
+            ax.plot(dataset_trn[:][0].cpu().numpy(),
+                    dataset_trn[:][1].cpu().numpy(),'*')
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.legend = True
+            ax.set_title("Training Data")
+            
+            # ax.plot(dataset_val[:][0].cpu().numpy(),
+            #         dataset_val[:][1].cpu().numpy(),'o')
+            
+            plt.show()
 
     # model = FCN(1,args.n_hid_nodes,1)
 
