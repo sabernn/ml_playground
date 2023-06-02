@@ -1,7 +1,7 @@
 
 
 import numpy as np
-from pyellipsoid import drawing
+# from pyellipsoid import drawing
 import matplotlib.pyplot as plt
 
 
