@@ -31,6 +31,8 @@ plt.imshow(ellipsoid[50])
 plt.show()
 # vol = np.zeros((X, Y, Y), dtype=np.float32)
 
+np.save('sphr.npy', sphr)
+np.save('ellipsoid.npy', ellipsoid)
 
 # print(vol.shape)
 

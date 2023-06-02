@@ -6,3 +6,4 @@ info.py
 *.pth
 *.csv
 *.xlsx
+*.npy
