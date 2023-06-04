@@ -7,3 +7,4 @@ info.py
 *.csv
 *.xlsx
 *.npy
+*.txt

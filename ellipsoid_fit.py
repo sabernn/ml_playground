@@ -22,11 +22,13 @@ z_ = np.linspace(0,Z-1,Z)
 
 x, y, z = np.meshgrid(x_, y_, z_, indexing='ij')
 
-error_matrix = np.zeros((4,4,4))
 
-for i in range(-2,2):
-    for j in range(-2,2):
-        for k in range(-2,2):
+
+error_matrix = np.zeros((20,20,20))
+
+for i in range(-30,-10):
+    for j in range(-10,10):
+        for k in range(10,30):
             xc = X/2+i
             yc = Y/2+j
             zc = Z/2+k
@@ -42,7 +44,8 @@ for i in range(-2,2):
             # print(f"Error: {error}")
 
             print(f"i: {i}, j: {j}, k: {k}, error: {error}")
-            error_matrix[i+2,j+2,k+2] = error
+            # error_matrix[i+10,j+10,k+10] = error
+            error_matrix[i+30,j+10,k-10] = error
 
 
 print(np.min(error_matrix))
@@ -50,9 +53,11 @@ print(np.where(error_matrix == np.min(error_matrix)))
 
 ind = np.where(error_matrix == np.min(error_matrix))
 
-xc = X/2-ind[0][0]-2
-yc = Y/2-ind[1][0]-2
-zc = Z/2+ind[2][0]-2
+
+
+xc = X/2-ind[0][0]-30
+yc = Y/2-ind[1][0]-10
+zc = Z/2+ind[2][0]+10
 
 # xc = X/2
 # yc = Y/2
