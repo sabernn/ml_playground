@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 
 real = np.load('realellipsoid.npy')
 real = real / 2**16
-real = real.astype(np.float32)*3
-real = np.round(real)
+real = real.astype(np.float32)
+# real = np.round(real)
 
 rmin = 29
 rmax = 2 * rmin
@@ -24,52 +24,54 @@ x, y, z = np.meshgrid(x_, y_, z_, indexing='ij')
 
 
 
-error_matrix = np.zeros((20,20,20))
+# error_matrix = np.zeros((20,60,60,60))
 
-for i in range(-30,-10):
-    for j in range(-10,10):
-        for k in range(10,30):
-            xc = X/2+i
-            yc = Y/2+j
-            zc = Z/2+k
+r=40
+i=-8
+j=-5
+k=-14
 
-
-            ellipsoid = (x - xc)**2/1**2 + (y - yc)**2/1**2 + (z-zc)**2/2**2 >= rmin**2
-            ellipsoid = ellipsoid.astype(np.float32)
-
-        # print(real.shape)
-            # print(ellipsoid.shape)
-
-            error = np.sum(np.abs(real - ellipsoid))
-            # print(f"Error: {error}")
-
-            print(f"i: {i}, j: {j}, k: {k}, error: {error}")
-            # error_matrix[i+10,j+10,k+10] = error
-            error_matrix[i+30,j+10,k-10] = error
+xc = X/2+i
+yc = Y/2+j
+zc = Z/2+k
 
 
-print(np.min(error_matrix))
-print(np.where(error_matrix == np.min(error_matrix)))
+ellipsoid = (x - xc)**2/1**2 + (y - yc)**2/1**2 + (z-zc)**2/2**2 >= r**2
+ellipsoid = ellipsoid.astype(np.float32)*np.max(real)
 
-ind = np.where(error_matrix == np.min(error_matrix))
+# print(real.shape)
+# print(ellipsoid.shape)
+
+error = np.sum(np.abs(real - ellipsoid))
+# print(f"Error: {error}")
+
+print(f"r: {r}, i: {i}, j: {j}, k: {k}, error: {error}")
+# error_matrix[i+10,j+10,k+10] = error
+# error_matrix[r-20,i+30,j+30,k+30] = error
 
 
+# print(np.min(error_matrix))
+# print(np.where(error_matrix == np.min(error_matrix)))
 
-xc = X/2-ind[0][0]-30
-yc = Y/2-ind[1][0]-10
-zc = Z/2+ind[2][0]+10
+# ind = np.where(error_matrix == np.min(error_matrix))
+
+# rc = ind[0][0]+20
+# xc = X/2-ind[1][0]-30
+# yc = Y/2-ind[2][0]-30
+# zc = Z/2+ind[3][0]+30
+
 
 # xc = X/2
 # yc = Y/2
 # zc = Z/2
 
 
-ellipsoid = (x - xc)**2/1**2 + (y - yc)**2/1**2 + (z-zc)**2/2**2 >= rmin**2
-ellipsoid = ellipsoid.astype(np.float32)
+ellipsoid = (x - xc)**2/1**2 + (y - yc)**2/1**2 + (z-zc)**2/2**2 >= r**2
+ellipsoid = ellipsoid.astype(np.float32)/np.max(real)
 
 for i in range(25):
     plt.subplot(5,5,i+1)
-    plt.imshow(real[5*i], cmap='gray')
+    plt.imshow(real[5*i])
     plt.imshow(ellipsoid[5*i], alpha=0.5)
 # plt.subplot(3,3,1)
 # plt.imshow(real[50])
