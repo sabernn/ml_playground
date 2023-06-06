@@ -24,13 +24,16 @@ x, y, z = np.meshgrid(x_, y_, z_, indexing='ij')
 
 
 
-# error_matrix = np.zeros((20,60,60,60))
+# error_matrix = np.zeros((4,4,4,4))
 
 r=40
 i=-8
 j=-5
 k=-14
-
+# for r in range(60,64):
+#     for i in range(-9,-5):
+#         for j in range(-5,-1):
+#             for k in range(-14,-10):
 xc = X/2+i
 yc = Y/2+j
 zc = Z/2+k
@@ -47,6 +50,7 @@ error = np.sum(np.abs(real - ellipsoid))
 
 print(f"r: {r}, i: {i}, j: {j}, k: {k}, error: {error}")
 # error_matrix[i+10,j+10,k+10] = error
+# error_matrix[r-60,i+9,j+5,k+14] = error
 # error_matrix[r-20,i+30,j+30,k+30] = error
 
 
@@ -67,7 +71,7 @@ print(f"r: {r}, i: {i}, j: {j}, k: {k}, error: {error}")
 
 
 ellipsoid = (x - xc)**2/1**2 + (y - yc)**2/1**2 + (z-zc)**2/2**2 >= r**2
-ellipsoid = ellipsoid.astype(np.float32)/np.max(real)
+# ellipsoid = ellipsoid.astype(np.float32)/np.max(real)
 
 for i in range(25):
     plt.subplot(5,5,i+1)
@@ -75,5 +79,8 @@ for i in range(25):
     plt.imshow(ellipsoid[5*i], alpha=0.5)
 # plt.subplot(3,3,1)
 # plt.imshow(real[50])
+
+
+np.save('estimated_ellipsoid.npy',ellipsoid*2**16)
 
 plt.show()
