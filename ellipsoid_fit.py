@@ -84,3 +84,5 @@ for i in range(25):
 np.save('estimated_ellipsoid.npy',ellipsoid*2**16)
 
 plt.show()
+
+
