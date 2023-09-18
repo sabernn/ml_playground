@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
+import cv2
+
 
 save = True
 
@@ -91,6 +93,7 @@ def crack_surface(img_size: int, center: tuple):
 
 def crack_volume(img,z_height=2048, shrink_factor_width=10,shrink_factor_length=1):
     # kernel = gaussian_filter([100, 100], sigma=(1,1))
+    kernel = np.ones((shrink_factor_width,shrink_factor_length),np.uint8)
     vol = np.zeros((z_height, img.shape[0], img.shape[1]))
     output = img
     count = 0
@@ -98,7 +101,8 @@ def crack_volume(img,z_height=2048, shrink_factor_width=10,shrink_factor_length=
     while np.sum(output) != 0 and count < z_height-1:
         # print(np.sum(output))
         count += 1
-        output = np.round(gaussian_filter(output, sigma=(shrink_factor_length,shrink_factor_width))/255)*255
+        # output = np.round(gaussian_filter(output, sigma=(shrink_factor_length,shrink_factor_width))/255)*255
+        output = np.round(cv2.erode(output, kernel)/255)*255
         vol[count,:,:] = output
 
     return vol
@@ -109,10 +113,10 @@ if __name__ == '__main__':
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
-    scrack = crack_surface(img_size=512,
-                            center=(256,256))
+    scrack = crack_surface(img_size=128,
+                            center=(64,64))
     # vcrack = crack_volume(scrack,center=(512,512))
-    vol = crack_volume(scrack,z_height=1024,shrink_factor_width=20,shrink_factor_length=2)
+    vol = crack_volume(scrack,z_height=1024,shrink_factor_width=2,shrink_factor_length=2)
     # plt.plot(crack)
     # plt.show()
     # plt.plot(x,y)
