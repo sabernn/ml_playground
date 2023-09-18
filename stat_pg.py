@@ -92,9 +92,12 @@ if __name__ == '__main__':
     plt.show()
 
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # X,Y,Z = vol
-    # ax.scatter(X, Y, Z, c='r', marker='o')
-    # plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.voxels(vol[::10,::10,::10])
+    ax.set_xlabel('Z (build direction)')
+    ax.set_ylabel('Y (image height)')
+    ax.set_zlabel('X (image width)')
+
+    plt.show()
 
