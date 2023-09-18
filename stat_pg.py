@@ -60,19 +60,20 @@ def generate_crack_3d():
 
 def crack_surface():
     img_size = 1024
-    height = 10
+    height = 20
     width = 200
     count_r = height
     count_l = height
     img = np.zeros((img_size, img_size))
     count = 0
+    cx = int(img_size/2)
+    cy = int(img_size/2)
     while count_r > 0.1 and count_l > 0.1:
         count_r *= (1-abs(np.random.normal(0, 0.005)))
         count_l *= (1-abs(np.random.normal(0, 0.005)))
         print(count_r,count_l)
-        x = int(img_size/2)
-        y = int(img_size/2)
-        img[y-int(count_l):y+int(count_r),x-count:x+count] = 255
+        cy += np.random.normal(0, 0.1)
+        img[int(cy-count_l):int(cy+count_r),cx-count:cx+count] = 255
         count += 1
 
     return img
