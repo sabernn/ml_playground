@@ -71,14 +71,16 @@ def crack_surface(img_size: int, center: tuple):
     cx = center[0]
     cyl = center[1]
     cyr = center[1]
+    smoothness_factor = 1 # higher = smoother
     while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1:
         # random asymmetrical decay of crack width
-        count_ul *= (1-abs(np.random.normal(0, 0.01)))
-        count_ur *= (1-abs(np.random.normal(0, 0.01)))
-        count_ll *= (1-abs(np.random.normal(0, 0.01)))
-        count_lr *= (1-abs(np.random.normal(0, 0.01)))
-        cyl += np.random.normal(0, 1)
-        cyr += np.random.normal(0, 1)
+        if count%smoothness_factor == 0:
+            count_ul *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+            count_ur *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+            count_ll *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+            count_lr *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+            cyl += np.random.normal(0, 1)
+            cyr += np.random.normal(0, 1)
         img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
         img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
         count += 1
