@@ -2,7 +2,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
 
+save = True
 
 def generate_crack():
     img_size = 1024
@@ -60,8 +62,8 @@ def generate_crack_3d():
 
 def crack_surface(img_size: int, center: tuple):
     # img_size = 1024
-    height = 5
-    width = 200
+    height = img_size/20
+    width = img_size/4
     count_ul = height
     count_ur = height
     count_ll = height
@@ -72,7 +74,7 @@ def crack_surface(img_size: int, center: tuple):
     cyl = center[1]
     cyr = center[1]
     smoothness_factor = 1 # higher = smoother
-    while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1:
+    while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
         # random asymmetrical decay of crack width
         if count%smoothness_factor == 0:
             count_ul *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
@@ -87,30 +89,53 @@ def crack_surface(img_size: int, center: tuple):
 
     return img
 
+def crack_volume(img,z_height=2048, shrink_factor_width=10,shrink_factor_length=1):
+    # kernel = gaussian_filter([100, 100], sigma=(1,1))
+    vol = np.zeros((z_height, img.shape[0], img.shape[1]))
+    output = img
+    count = 0
+    vol[count,:,:] = output
+    while np.sum(output) != 0 and count < z_height-1:
+        # print(np.sum(output))
+        count += 1
+        output = np.round(gaussian_filter(output, sigma=(shrink_factor_length,shrink_factor_width))/255)*255
+        vol[count,:,:] = output
+
+    return vol
+
 
 
 if __name__ == '__main__':
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
-    scrack = crack_surface(img_size=1024,
-                            center=(512,512))
+    scrack = crack_surface(img_size=512,
+                            center=(256,256))
+    # vcrack = crack_volume(scrack,center=(512,512))
+    vol = crack_volume(scrack,z_height=1024,shrink_factor_width=20,shrink_factor_length=2)
     # plt.plot(crack)
     # plt.show()
     # plt.plot(x,y)
     # plt.show()
     # plt.imshow(img*255)
 
-    plt.figure(figsize=(5,5))
+    plt.figure(figsize=(10,5))
+    plt.subplot(1,2,1)
     plt.imshow(scrack)
+    plt.subplot(1,2,2)
+    plt.imshow(vol[0])
     plt.show()
     
-    # plt.figure(figsize=(10,10))
-    # for i in range(9):
-    #     plt.subplot(3,3,i+1)
-    #     plt.imshow(vol[:,i*100,:])
+    plt.figure(figsize=(10,10))
+    for i in range(9):
+        plt.subplot(3,3,i+1)
+        plt.imshow(vol[i])
 
-    # plt.show()
+    plt.show()
+
+
+    if save:
+        np.save('vol.npy',vol)
 
 
     # fig = plt.figure()
