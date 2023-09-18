@@ -58,58 +58,65 @@ def generate_crack_3d():
 
     return output,x,y,z,vol
 
-def crack_surface():
-    img_size = 1024
-    height = 20
+def crack_surface(img_size: int, center: tuple):
+    # img_size = 1024
+    height = 5
     width = 200
-    count_r = height
-    count_l = height
+    count_ul = height
+    count_ur = height
+    count_ll = height
+    count_lr = height
     img = np.zeros((img_size, img_size))
     count = 0
-    cx = int(img_size/2)
-    cy = int(img_size/2)
-    while count_r > 0.1 and count_l > 0.1:
-        count_r *= (1-abs(np.random.normal(0, 0.005)))
-        count_l *= (1-abs(np.random.normal(0, 0.005)))
-        print(count_r,count_l)
-        cy += np.random.normal(0, 0.1)
-        img[int(cy-count_l):int(cy+count_r),cx-count:cx+count] = 255
+    cx = center[0]
+    cyl = center[1]
+    cyr = center[1]
+    while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1:
+        # random asymmetrical decay of crack width
+        count_ul *= (1-abs(np.random.normal(0, 0.01)))
+        count_ur *= (1-abs(np.random.normal(0, 0.01)))
+        count_ll *= (1-abs(np.random.normal(0, 0.01)))
+        count_lr *= (1-abs(np.random.normal(0, 0.01)))
+        cyl += np.random.normal(0, 1)
+        cyr += np.random.normal(0, 1)
+        img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
+        img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
         count += 1
 
     return img
 
-    
 
 
 if __name__ == '__main__':
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
-    scrack = crack_surface()
+    scrack = crack_surface(img_size=1024,
+                            center=(512,512))
     # plt.plot(crack)
     # plt.show()
     # plt.plot(x,y)
     # plt.show()
     # plt.imshow(img*255)
 
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=(5,5))
     plt.imshow(scrack)
     plt.show()
     
-    plt.figure(figsize=(10,10))
-    for i in range(9):
-        plt.subplot(3,3,i+1)
-        plt.imshow(vol[:,i*100,:])
+    # plt.figure(figsize=(10,10))
+    # for i in range(9):
+    #     plt.subplot(3,3,i+1)
+    #     plt.imshow(vol[:,i*100,:])
 
-    plt.show()
+    # plt.show()
 
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.voxels(vol[::100,::100,::100])
-    ax.set_xlabel('Z (build direction)')
-    ax.set_ylabel('Y (image height)')
-    ax.set_zlabel('X (image width)')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.voxels(vol[::100,::100,::100])
+    # ax.set_xlabel('Z (build direction)')
+    # ax.set_ylabel('Y (image height)')
+    # ax.set_zlabel('X (image width)')
 
-    plt.show()
+    # plt.show()
 
