@@ -37,7 +37,7 @@ def generate_crack():
 def generate_crack_3d():
     h = 1024
     w = 1024
-    d = 2048
+    d = 1024
     countz = np.random.randint(10, 30)
     # print(count)
     vol = np.zeros((d, h, w))
@@ -62,58 +62,132 @@ def generate_crack_3d():
 
     return output,x,y,z,vol
 
-def crack_surface(img_size: int, center: tuple):
+def surface_crack(img_size: int):
     # img_size = 1024
     height = img_size/20
     width = img_size/4
-    count_l = height
-    count_r = height
+    
     # count_ul = height
     # count_ur = height
     # count_ll = height
     # count_lr = height
     img = np.zeros((img_size, img_size))
-    count = 0
-    cx = center[0]
-    cyl = center[1]
-    cyr = center[1]
-    smoothness_factor = 1 # higher = smoother
-    # while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
-    while count_l > 1 and count_r > 1 and count < img_size/2:
-        # random asymmetrical decay of crack width
-        if count%smoothness_factor == 0:
-            count_l *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            count_r *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            # count_ul *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            # count_ur *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            # count_ll *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            # count_lr *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-            cyl += np.random.normal(0, 1)
-            cyr += np.random.normal(0, 1)
-        # img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
-        # img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
+    
+    crack_count = np.random.randint(1, 10)
+    print(f"crack count: {crack_count}")
+    centers = np.random.randint(0, img_size, size=(2,crack_count))
+    for i in range(crack_count):
+        cx = centers[0, i]
+        cyl = centers[1, i]
+        cyr = centers[1, i]
+        smoothness_factor = 1 # higher = smoother
+        count = 0
+        height = np.random.randint(1, img_size/30)
+        count_l = height
+        count_r = height
+        # while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
+        while count_l > 1 and count_r > 1 and count < img_size/2:
+            # random asymmetrical decay of crack width
+            if count%smoothness_factor == 0:
+                count_l *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                count_r *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                # count_ul *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                # count_ur *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                # count_ll *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                # count_lr *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                cyl += np.random.normal(0, 1)
+                cyr += np.random.normal(0, 1)
+            # img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
+            # img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
 
-        img[int(cyl-count_l/2):int(cyl+count_l/2),cx-count:cx-count+1] = 255
-        img[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
-        count += 1
+            img[int(cyl-count_l/2):int(cyl+count_l/2),cx-count:cx-count+1] = 255
+            img[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
+            count += 1
 
     return img
 
-def crack_volume(img,z_height=2048, shrink_factor_width=10,shrink_factor_length=1):
+
+def volume_crack(base_size: int, height_size: int):
+    
+    # count_ul = height
+    # count_ur = height
+    # count_ll = height
+    # count_lr = height
+    vol = np.zeros((height_size, base_size, base_size))
+    
+    crack_count = np.random.randint(1, 10)
+    print(f"crack count: {crack_count}")
+    centers = np.random.randint(0, base_size, size=(3,crack_count))
+    for i in range(crack_count):
+        cx = centers[0, i]
+        cy = centers[1, i]
+        cz_ul = centers[2, i]
+        cz_ur = centers[2, i]
+        cz_ll = centers[2, i]
+        cz_lr = centers[2, i]
+        smoothness_factor = 1 # higher = smoother
+        count = 0
+        height = np.random.randint(1, base_size/10)
+        count_ul = height
+        count_ur = height
+        count_ll = height
+        count_lr = height
+        while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < base_size/2:
+        # while count_l > 1 and count_r > 1 and count < img_size/2:
+            # random asymmetrical decay of crack width
+            if count%smoothness_factor == 0:
+                # count_l *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                # count_r *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
+                count_ul *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
+                count_ur *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
+                count_ll *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
+                count_lr *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
+                cz_ul += np.random.normal(0, 1)
+                cz_ur += np.random.normal(0, 1)
+                cz_ll += np.random.normal(0, 1)
+                cz_lr += np.random.normal(0, 1)
+            # img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
+            # img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
+
+            # vol[int(cz_ul-count_ul/2):int(cz_ul+count_ul/2),cy-count:cy-count+1,cx-count:cx-count+1] = 255
+            # vol[int(cz_ur-count_ur/2):int(cz_ur+count_ur/2),cy-count:cy-count+1,cx+count:cx+count+1] = 255
+            # vol[int(cz_ll-count_ll/2):int(cz_ll+count_ll/2),cy+count:cy+count+1,cx-count:cx-count+1] = 255 
+            # vol[int(cz_lr-count_lr/2):int(cz_lr+count_lr/2),cy+count:cy+count+1,cx+count:cx+count+1] = 255
+            vol[int(cz_ul-count_ul/2):int(cz_ul+count_ul/2),cy:cy-count+1,cx:cx-count+1] = 255
+            vol[int(cz_ur-count_ur/2):int(cz_ur+count_ur/2),cy:cy-count+1,cx:cx+count+1] = 255
+            vol[int(cz_ll-count_ll/2):int(cz_ll+count_ll/2),cy:cy+count+1,cx:cx-count+1] = 255 
+            vol[int(cz_lr-count_lr/2):int(cz_lr+count_lr/2),cy:cy+count+1,cx:cx+count+1] = 255
+
+            
+
+            # vol[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
+            count += 1
+        print(f"crack volume: {vol.sum()/255}")
+
+    print(f"crack volume fraction: {vol.sum()/(255*base_size*base_size*height_size)}")
+    return vol
+
+
+
+def volume_crack_from_surface(img,z_height=1024, shrink_factor_width=10,shrink_factor_length=1):
     # kernel = gaussian_filter([100, 100], sigma=(1,1))
     kernel = np.ones((shrink_factor_width,shrink_factor_length),np.uint8)
     vol = np.zeros((z_height, img.shape[0], img.shape[1]))
     output = img
     count = 0
     vol[count,:,:] = output
+    # depth_factor = 10 # higher = deeper
+    depth_factor = np.random.randint(10, 100)
+    print(f"depth factor: {depth_factor}")
     while np.sum(output) != 0 and count < z_height-1:
         # print(np.sum(output))
         count += 1
         # output = np.round(gaussian_filter(output, sigma=(shrink_factor_length,shrink_factor_width))/255)*255
         # output = np.round(cv2.erode(output, kernel)/255)*255
-        output = cv2.erode(output, kernel)
+        if count%depth_factor == 0:
+            output = cv2.erode(output, kernel)
         # output = cv2.dilate(output, kernel,iterations=1)
-        print(np.sum(output))
+        # print(np.sum(output))
         vol[count,:,:] = output
 
     return vol
@@ -124,28 +198,47 @@ if __name__ == '__main__':
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
-    scrack = crack_surface(img_size=1024,
-                            center=(512,512))
-    # vcrack = crack_volume(scrack,center=(512,512))
-    # vol = crack_volume(scrack,z_height=2048,shrink_factor_width=np.random.randint(1,2),shrink_factor_length=np.random.randint(1,2))
-    vol = crack_volume(scrack,z_height=2048,shrink_factor_width=2,shrink_factor_length=2)
+
+    random_values = {'crack_count': np.random.randint(1, 10),
+                        'crack_height': np.random.randint(1, 10),
+                        'crack_width': np.random.randint(1, 10),
+                        'crack_smoothness': np.random.randint(1, 10),
+                        'crack_depth': np.random.randint(1, 10),
+                        'crack_depth_factor': np.random.randint(1, 10),
+                        'crack_shrink_factor_width': np.random.randint(1, 10),
+                        'crack_shrink_factor_length': np.random.randint(1, 10)}
+
+
+    # vol = volume_crack(base_size=1024, height_size=1024)
+
+    scrack = surface_crack(img_size=1024)
+    # # vcrack = crack_volume(scrack,center=(512,512))
+    # # vol = crack_volume(scrack,z_height=1024,shrink_factor_width=np.random.randint(1,2),shrink_factor_length=np.random.randint(1,2))
+    vol = volume_crack_from_surface(scrack,z_height=1024,shrink_factor_width=2,shrink_factor_length=2)
     # plt.plot(crack)
     # plt.show()
     # plt.plot(x,y)
     # plt.show()
     # plt.imshow(img*255)
 
-    plt.figure(figsize=(10,5))
-    plt.subplot(1,2,1)
-    plt.imshow(scrack)
-    plt.subplot(1,2,2)
-    plt.imshow(vol[0])
-    plt.show()
+    # plt.figure(figsize=(10,5))
+    # plt.subplot(1,2,1)
+    # plt.imshow(scrack)
+    # plt.subplot(1,2,2)
+    # plt.imshow(vol[0])
+    # plt.show()
     
     plt.figure(figsize=(10,10))
     for i in range(9):
         plt.subplot(3,3,i+1)
         plt.imshow(vol[10*i])
+
+    plt.show()
+
+    plt.figure(figsize=(10,10))
+    for i in range(9):
+        plt.subplot(3,3,i+1)
+        plt.imshow(vol[:,10*i,:])
 
     plt.show()
 
