@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 import cv2
+import patchify as pf
 
 
 save = False
@@ -75,7 +76,7 @@ def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int
     img = np.zeros((img_size, img_size))
     
     # crack_count = np.random.randint(1, 10)
-    print(f"crack count: {crack_count}")
+    # print(f"crack count: {crack_count}")
     centers = np.random.randint(0, img_size, size=(2,crack_count))
     for i in range(crack_count):
         
@@ -219,29 +220,61 @@ def volume_crack_from_surface(img,z_height=1024, shrink_factor_width=10,shrink_f
     return vol
 
 
+def generate_mask(params, save_mask=True):
+    count = 0
+    for i in range(params['image_count']):
+        while count<params['mask_count']:
+            img = surface_crack(img_size=params['image_size'],
+                                crack_count=np.random.randint(params['min_crack_count'], params['max_crack_count']),
+                                min_crack_thickness=params['min_crack_thickness'],
+                                max_crack_thickness=params['max_crack_thickness'])
+            masks = pf.patchify(img, (params['mask_size'], params['mask_size']), step=512)
+            masks = masks.reshape(-1, params['mask_size'], params['mask_size'])
+            # l = masks.shape[0]*masks.shape[1]
+            for mask in masks:
+                if mask.sum() > 0:
+                    if save_mask:
+                        cv2.imwrite(f"masks/mask_{count}.png", mask)
+                    count += 1
+                    # print(f"mask {count} generated")
+            # count += (masks.shape[0]*masks.shape[1])
+
+
 
 if __name__ == '__main__':
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
+    params = {'image_size': 1024,
+                'image_count': 1000,
+                'mask_size': 512,
+                'mask_count': 1600,
+                'min_crack_count': 10,
+                'max_crack_count': 20,
+                'min_crack_thickness': 1,
+                'max_crack_thickness': 20,
 
-    random_values = {'crack_count': np.random.randint(10, 20),
-                        'min_crack_thickness': 1,
-                        'max_crack_thickness': 10,
-                        'crack_width': np.random.randint(1, 10),
-                        'crack_smoothness': np.random.randint(1, 10),
-                        'crack_depth': np.random.randint(1, 10),
-                        'crack_depth_factor': np.random.randint(1, 10),
-                        'crack_shrink_factor_width': np.random.randint(1, 10),
-                        'crack_shrink_factor_length': np.random.randint(1, 10)}
+                }
+    
+    generate_mask(params)
+
+    # random_values = {'crack_count': np.random.randint(10, 20),
+    #                     'min_crack_thickness': 1,
+    #                     'max_crack_thickness': 10,
+    #                     'crack_width': np.random.randint(1, 10),
+    #                     'crack_smoothness': np.random.randint(1, 10),
+    #                     'crack_depth': np.random.randint(1, 10),
+    #                     'crack_depth_factor': np.random.randint(1, 10),
+    #                     'crack_shrink_factor_width': np.random.randint(1, 10),
+    #                     'crack_shrink_factor_length': np.random.randint(1, 10)}
 
 
     # vol = volume_crack(base_size=1024, height_size=1024)
-    print(random_values)
-    scrack = surface_crack(img_size=1024,
-                            crack_count=random_values['crack_count'],
-                            min_crack_thickness=random_values['min_crack_thickness'],
-                            max_crack_thickness=random_values['max_crack_thickness'])
+    # print(random_values)
+    # scrack = surface_crack(img_size=1024,
+    #                         crack_count=random_values['crack_count'],
+    #                         min_crack_thickness=random_values['min_crack_thickness'],
+    #                         max_crack_thickness=random_values['max_crack_thickness'])
     # # vcrack = crack_volume(scrack,center=(512,512))
     # # vol = crack_volume(scrack,z_height=1024,shrink_factor_width=np.random.randint(1,2),shrink_factor_length=np.random.randint(1,2))
     # vol = volume_crack_from_surface(scrack,z_height=1024,shrink_factor_width=2,shrink_factor_length=2)
@@ -251,12 +284,12 @@ if __name__ == '__main__':
     # plt.show()
     # plt.imshow(img*255)
 
-    plt.figure(figsize=(10,5))
+    # plt.figure(figsize=(10,5))
     # plt.subplot(1,2,1)
-    plt.imshow(scrack)
+    # plt.imshow(scrack)
     # plt.subplot(1,2,2)
     # plt.imshow(vol[0])
-    plt.show()
+    # plt.show()
     
     # plt.figure(figsize=(10,10))
     # for i in range(9):
