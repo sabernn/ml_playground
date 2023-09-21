@@ -62,10 +62,11 @@ def generate_crack_3d():
 
     return output,x,y,z,vol
 
-def surface_crack(img_size: int):
+def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int = 1, max_crack_thickness: int = 10):
     # img_size = 1024
-    height = img_size/20
-    width = img_size/4
+
+    # height = img_size/20
+    # width = img_size/4
     
     # count_ul = height
     # count_ur = height
@@ -73,18 +74,20 @@ def surface_crack(img_size: int):
     # count_lr = height
     img = np.zeros((img_size, img_size))
     
-    crack_count = np.random.randint(1, 10)
+    # crack_count = np.random.randint(1, 10)
     print(f"crack count: {crack_count}")
     centers = np.random.randint(0, img_size, size=(2,crack_count))
     for i in range(crack_count):
+        
+
         cx = centers[0, i]
         cyl = centers[1, i]
         cyr = centers[1, i]
         smoothness_factor = 1 # higher = smoother
         count = 0
-        height = np.random.randint(1, img_size/30)
-        count_l = height
-        count_r = height
+        crack_thickness = np.random.randint(min_crack_thickness, max_crack_thickness)
+        count_l = crack_thickness
+        count_r = crack_thickness
         # while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
         while count_l > 1 and count_r > 1 and count < img_size/2:
             # random asymmetrical decay of crack width
@@ -106,6 +109,12 @@ def surface_crack(img_size: int):
 
     return img
 
+def gauss_2d(img_size, center, sigma):
+    x, y = np.meshgrid(np.linspace(0, img_size, img_size), np.linspace(0, img_size, img_size))
+    d = np.sqrt((x - center[0])**2 + (y - center[1])**2)
+    mu, sigma = 0, sigma
+    gauss = np.exp(-( (d-mu)**2 / ( 2.0 * sigma**2 ) ) )
+    return gauss
 
 def volume_crack(base_size: int, height_size: int):
     
@@ -115,10 +124,27 @@ def volume_crack(base_size: int, height_size: int):
     # count_lr = height
     vol = np.zeros((height_size, base_size, base_size))
     
-    crack_count = np.random.randint(1, 10)
+    # crack_count = np.random.randint(1, 10)
+    crack_count = 1
+
     print(f"crack count: {crack_count}")
     centers = np.random.randint(0, base_size, size=(3,crack_count))
     for i in range(crack_count):
+        # x, y = np.meshgrid(np.linspace(0, base_size, base_size), np.linspace(0, base_size, base_size))
+        # d = np.sqrt((x - centers[0, i])**2 + (y - centers[1, i])**2)
+        # mu, sigma = 0, 10
+        # gauss = np.exp(-( (d-mu)**2 / ( 2.0 * sigma**2 ) ) )
+        height = np.random.randint(1, base_size/10)
+        # height = 5
+        # gauss = gauss_2d(base_size, (centers[0, i], centers[1, i]), 100)
+        # gauss_crack = height*gauss + gauss*abs(np.random.normal(0, 10, size=(base_size, base_size)))
+        # indvol = gauss_crack > 0.5
+
+        # indvol_value = np.zeros((height_size, base_size, base_size))
+        # indvol_value[:, :, centers[2, i]] = gauss_crack[indvol]
+
+        # vol[:, :, centers[2, i]] = gauss_crack
+
         cx = centers[0, i]
         cy = centers[1, i]
         cz_ul = centers[2, i]
@@ -127,7 +153,7 @@ def volume_crack(base_size: int, height_size: int):
         cz_lr = centers[2, i]
         smoothness_factor = 1 # higher = smoother
         count = 0
-        height = np.random.randint(1, base_size/10)
+        
         count_ul = height
         count_ur = height
         count_ll = height
@@ -158,7 +184,7 @@ def volume_crack(base_size: int, height_size: int):
             vol[int(cz_ll-count_ll/2):int(cz_ll+count_ll/2),cy:cy+count+1,cx:cx-count+1] = 255 
             vol[int(cz_lr-count_lr/2):int(cz_lr+count_lr/2),cy:cy+count+1,cx:cx+count+1] = 255
 
-            
+            # np.random.normal([0,0],[1,1])
 
             # vol[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
             count += 1
@@ -199,8 +225,9 @@ if __name__ == '__main__':
     # crack,x,y,z,vol = generate_crack_3d()
 
 
-    random_values = {'crack_count': np.random.randint(1, 10),
-                        'crack_height': np.random.randint(1, 10),
+    random_values = {'crack_count': np.random.randint(10, 20),
+                        'min_crack_thickness': 1,
+                        'max_crack_thickness': 10,
                         'crack_width': np.random.randint(1, 10),
                         'crack_smoothness': np.random.randint(1, 10),
                         'crack_depth': np.random.randint(1, 10),
@@ -210,37 +237,40 @@ if __name__ == '__main__':
 
 
     # vol = volume_crack(base_size=1024, height_size=1024)
-
-    scrack = surface_crack(img_size=1024)
+    print(random_values)
+    scrack = surface_crack(img_size=1024,
+                            crack_count=random_values['crack_count'],
+                            min_crack_thickness=random_values['min_crack_thickness'],
+                            max_crack_thickness=random_values['max_crack_thickness'])
     # # vcrack = crack_volume(scrack,center=(512,512))
     # # vol = crack_volume(scrack,z_height=1024,shrink_factor_width=np.random.randint(1,2),shrink_factor_length=np.random.randint(1,2))
-    vol = volume_crack_from_surface(scrack,z_height=1024,shrink_factor_width=2,shrink_factor_length=2)
+    # vol = volume_crack_from_surface(scrack,z_height=1024,shrink_factor_width=2,shrink_factor_length=2)
     # plt.plot(crack)
     # plt.show()
     # plt.plot(x,y)
     # plt.show()
     # plt.imshow(img*255)
 
-    # plt.figure(figsize=(10,5))
+    plt.figure(figsize=(10,5))
     # plt.subplot(1,2,1)
-    # plt.imshow(scrack)
+    plt.imshow(scrack)
     # plt.subplot(1,2,2)
     # plt.imshow(vol[0])
-    # plt.show()
+    plt.show()
     
-    plt.figure(figsize=(10,10))
-    for i in range(9):
-        plt.subplot(3,3,i+1)
-        plt.imshow(vol[10*i])
+    # plt.figure(figsize=(10,10))
+    # for i in range(9):
+    #     plt.subplot(3,3,i+1)
+    #     plt.imshow(vol[10*i])
 
-    plt.show()
+    # plt.show()
 
-    plt.figure(figsize=(10,10))
-    for i in range(9):
-        plt.subplot(3,3,i+1)
-        plt.imshow(vol[:,10*i,:])
+    # plt.figure(figsize=(10,10))
+    # for i in range(9):
+    #     plt.subplot(3,3,i+1)
+    #     plt.imshow(vol[:,10*i,:])
 
-    plt.show()
+    # plt.show()
 
 
     if save:
