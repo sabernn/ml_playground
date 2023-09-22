@@ -77,7 +77,7 @@ def generate_crack_3d():
 
     return output,x,y,z,vol
 
-def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int = 1, max_crack_thickness: int = 10):
+def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int = 1, max_crack_thickness: int = 10, hor: bool = True):
     # img_size = 1024
 
     # height = img_size/20
@@ -104,6 +104,7 @@ def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int
         count_l = crack_thickness
         count_r = crack_thickness
         # while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
+        hor = np.random.randint(0, 2)
         while count_l > 1 and count_r > 1 and count < img_size/2:
             # random asymmetrical decay of crack width
             if count%smoothness_factor == 0:
@@ -117,9 +118,14 @@ def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int
                 cyr += np.random.normal(0, 1)
             # img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
             # img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
+            if hor:
+                img[int(cyl-count_l/2):int(cyl+count_l/2),cx-count:cx-count+1] = 255
+                img[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
+            else:
+                img[cx-count:cx-count+1, int(cyl-count_l/2):int(cyl+count_l/2)] = 255
+                img[cx+count:cx+count+1, int(cyr-count_r/2):int(cyr+count_r/2)] = 255
 
-            img[int(cyl-count_l/2):int(cyl+count_l/2),cx-count:cx-count+1] = 255
-            img[int(cyr-count_r/2):int(cyr+count_r/2),cx+count:cx+count+1] = 255
+
             count += 1
 
     return img
