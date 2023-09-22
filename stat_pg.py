@@ -5,6 +5,20 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 import cv2
 import patchify as pf
+from albumentations import (
+    HorizontalFlip,
+    VerticalFlip,
+    Compose,
+    CLAHE,
+    RandomRotate90,
+    Rotate,
+    IAAPiecewiseAffine,
+    IAAPerspective,
+    RandomContrast,#limit=0.2
+    RandomBrightness,#limit=0.2
+    GaussNoise,#var_limit=50
+    Normalize#Default:mean,std of ImageNet 2012 {mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]}
+)
 
 
 save = False
@@ -232,9 +246,12 @@ def generate_mask(params, save_mask=True):
             masks = masks.reshape(-1, params['mask_size'], params['mask_size'])
             # l = masks.shape[0]*masks.shape[1]
             for mask in masks:
+                
                 if mask.sum() > 0:
+                    aug = Compose([IAAPiecewiseAffine(scale=(0.09, 0.13), nb_rows=4, nb_cols=4, order=1, cval=0, mode='constant', always_apply=False, p=1),Rotate(limit=30, p=0.5)], p=1)
+                    mask = aug(image=mask)['image']
                     if save_mask:
-                        cv2.imwrite(f"masks/mask_{count}.png", mask)
+                        cv2.imwrite(f"trainA/{str(count).zfill(5)}.png", mask)
                     count += 1
                     # print(f"mask {count} generated")
             # count += (masks.shape[0]*masks.shape[1])
