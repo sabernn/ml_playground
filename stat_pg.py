@@ -77,7 +77,15 @@ def generate_crack_3d():
 
     return output,x,y,z,vol
 
-def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int = 1, max_crack_thickness: int = 10, hor: bool = True):
+def surface_crack(img_size: int, 
+                    crack_count: int = 10, 
+                    min_crack_thickness: int = 1, 
+                    max_crack_thickness: int = 10, 
+                    hor: bool = True,
+                    min_roughness_factor: float = 0.1, 
+                    max_roughness_factor: float = 1.0,
+                    min_decay_factor: int = 1,
+                    max_decay_factor: int = 10):
     # img_size = 1024
 
     # height = img_size/20
@@ -98,24 +106,27 @@ def surface_crack(img_size: int, crack_count: int = 10, min_crack_thickness: int
         cx = centers[0, i]
         cyl = centers[1, i]
         cyr = centers[1, i]
-        smoothness_factor = 1 # higher = smoother
+        # decay_factor = 1 # higher = faster decay
+        # roughness_factor = 1 # higher = smoother
         count = 0
         crack_thickness = np.random.randint(min_crack_thickness, max_crack_thickness)
+        decay_factor = np.random.randint(min_decay_factor, max_decay_factor)
+        roughness_factor = np.random.uniform(min_roughness_factor, max_roughness_factor)
         count_l = crack_thickness
         count_r = crack_thickness
         # while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < img_size/2:
         hor = np.random.randint(0, 2)
         while count_l > 1 and count_r > 1 and count < img_size/2:
             # random asymmetrical decay of crack width
-            if count%smoothness_factor == 0:
-                count_l *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                count_r *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                # count_ul *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                # count_ur *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                # count_ll *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                # count_lr *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                cyl += np.random.normal(0, 1)
-                cyr += np.random.normal(0, 1)
+            if count%decay_factor == 0:
+                count_l *= (1-abs(np.random.normal(0, 0.01*decay_factor)))
+                count_r *= (1-abs(np.random.normal(0, 0.01*decay_factor)))
+                # count_ul *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                # count_ur *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                # count_ll *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                # count_lr *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                cyl += np.random.normal(0, roughness_factor)
+                cyr += np.random.normal(0, roughness_factor)
             # img[int(cyl-count_ll):int(cyl+count_ul),cx-count:cx-count+1] = 255
             # img[int(cyr-count_lr):int(cyr+count_ur),cx+count:cx+count+1] = 255
             if hor:
@@ -172,7 +183,7 @@ def volume_crack(base_size: int, height_size: int):
         cz_ur = centers[2, i]
         cz_ll = centers[2, i]
         cz_lr = centers[2, i]
-        smoothness_factor = 1 # higher = smoother
+        roughness_factor = 1 # higher = smoother
         count = 0
         
         count_ul = height
@@ -182,13 +193,13 @@ def volume_crack(base_size: int, height_size: int):
         while count_ul > 1 and count_ur > 1 and count_ll > 1 and count_lr > 1 and count < base_size/2:
         # while count_l > 1 and count_r > 1 and count < img_size/2:
             # random asymmetrical decay of crack width
-            if count%smoothness_factor == 0:
-                # count_l *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                # count_r *= (1-abs(np.random.normal(0, 0.01*smoothness_factor)))
-                count_ul *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
-                count_ur *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
-                count_ll *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
-                count_lr *= (1-abs(np.random.normal(0, 0.0001*smoothness_factor)))
+            if count%roughness_factor == 0:
+                # count_l *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                # count_r *= (1-abs(np.random.normal(0, 0.01*roughness_factor)))
+                count_ul *= (1-abs(np.random.normal(0, 0.0001*roughness_factor)))
+                count_ur *= (1-abs(np.random.normal(0, 0.0001*roughness_factor)))
+                count_ll *= (1-abs(np.random.normal(0, 0.0001*roughness_factor)))
+                count_lr *= (1-abs(np.random.normal(0, 0.0001*roughness_factor)))
                 cz_ul += np.random.normal(0, 1)
                 cz_ur += np.random.normal(0, 1)
                 cz_ll += np.random.normal(0, 1)
@@ -247,7 +258,11 @@ def generate_mask(params, save_mask=True):
             img = surface_crack(img_size=params['image_size'],
                                 crack_count=np.random.randint(params['min_crack_count'], params['max_crack_count']),
                                 min_crack_thickness=params['min_crack_thickness'],
-                                max_crack_thickness=params['max_crack_thickness'])
+                                max_crack_thickness=params['max_crack_thickness'],
+                                min_decay_factor=params['minDF'],
+                                max_decay_factor=params['maxDF'],
+                                min_roughness_factor=params['minRF'],
+                                max_roughness_factor=params['maxRF'])
             masks = pf.patchify(img, (params['mask_size'], params['mask_size']), step=512)
             masks = masks.reshape(-1, params['mask_size'], params['mask_size'])
             # l = masks.shape[0]*masks.shape[1]
@@ -257,7 +272,7 @@ def generate_mask(params, save_mask=True):
                     aug = Compose([IAAPiecewiseAffine(scale=(0.09, 0.13), nb_rows=4, nb_cols=4, order=1, cval=0, mode='constant', always_apply=False, p=1),Rotate(limit=30, p=0.5)], p=1)
                     mask = aug(image=mask)['image']
                     if save_mask:
-                        cv2.imwrite(f"trainA/{str(count).zfill(5)}.png", mask)
+                        cv2.imwrite(f"trainA0/{str(count).zfill(5)}.png", mask)
                     count += 1
                     # print(f"mask {count} generated")
             # count += (masks.shape[0]*masks.shape[1])
@@ -272,11 +287,14 @@ if __name__ == '__main__':
                 'image_count': 1000,
                 'mask_size': 512,
                 'mask_count': 1600,
-                'min_crack_count': 10,
-                'max_crack_count': 20,
+                'min_crack_count': 1,
+                'max_crack_count': 10,
                 'min_crack_thickness': 1,
-                'max_crack_thickness': 20,
-
+                'max_crack_thickness': 60,
+                'minDF': 1,
+                'maxDF': 10,
+                'minRF': 0.1,
+                'maxRF': 1,
                 }
     
     generate_mask(params)
@@ -285,7 +303,7 @@ if __name__ == '__main__':
     #                     'min_crack_thickness': 1,
     #                     'max_crack_thickness': 10,
     #                     'crack_width': np.random.randint(1, 10),
-    #                     'crack_smoothness': np.random.randint(1, 10),
+    #                     'crack_roughness': np.random.randint(1, 10),
     #                     'crack_depth': np.random.randint(1, 10),
     #                     'crack_depth_factor': np.random.randint(1, 10),
     #                     'crack_shrink_factor_width': np.random.randint(1, 10),
@@ -329,8 +347,8 @@ if __name__ == '__main__':
     # plt.show()
 
 
-    if save:
-        np.save('vol.npy',vol)
+    # if save:
+    #     np.save('vol.npy',vol)
 
 
     # fig = plt.figure()
