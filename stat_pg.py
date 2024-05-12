@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 import cv2
 import patchify as pf
+import os
+import time
 from albumentations import (
     HorizontalFlip,
     VerticalFlip,
@@ -272,7 +274,9 @@ def generate_mask(params, save_mask=True):
                     aug = Compose([PiecewiseAffine(scale=(0.09, 0.13), nb_rows=4, nb_cols=4, order=1, cval=0, mode='constant', always_apply=False, p=1),Rotate(limit=30, p=0.5)], p=1)
                     mask = aug(image=mask)['image']
                     if save_mask:
-                        cv2.imwrite(f"trainA0/{str(count).zfill(5)}.png", mask)
+                        if not os.path.exists("trainA00"):
+                            os.makedirs("trainA00")
+                        cv2.imwrite(f"trainA00/{str(count).zfill(5)}.png", mask)
                     count += 1
                     # print(f"mask {count} generated")
             # count += (masks.shape[0]*masks.shape[1])
@@ -280,6 +284,8 @@ def generate_mask(params, save_mask=True):
 
 
 if __name__ == '__main__':
+    print("Hi")
+    t0 = time.time()
     # crack,x,y,img = generate_crack()
     # crack,x,y,z,vol = generate_crack_3d()
 
@@ -359,4 +365,7 @@ if __name__ == '__main__':
     # ax.set_zlabel('X (image width)')
 
     # plt.show()
+
+    print(f"Time taken: {time.time()-t0} seconds.")
+    print("Bye")
 
